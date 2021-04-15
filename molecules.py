@@ -245,15 +245,7 @@ def provide_crappificated(png_path: Path, crappy_path: Path):
 
 def process_single(inchi: str, out_root: Path, name: str, img_id: int):
     mol = inchi_to_mol(inchi)
-    try:
-        Chem.Kekulize(mol, clearAromaticFlags=True)
-        Chem.SanitizeMol(mol)
-        mol = rdMolDraw2D.PrepareMolForDrawing(mol, kekulize=True)
-    except Exception as e:
-        print(e)
-    svg_text = mol_to_svg(mol)
-    save_svg(svg_text, out_root / 'svg' / f"{name}.svg")
-    svg_to_png(out_root / 'svg' / f"{name}.svg", out_root / 'png' / f"{name}.png")
+    mol_to_png(mol, name, out_root)
     provide_crappificated(out_root / 'png' / f"{name}.png", out_root / 'crappy' / f"{name}.png")
     atoms, bonds = get_svg_features(out_root / 'svg' / f"{name}.svg")
     mol_bonds = mol.GetBonds()
@@ -280,6 +272,18 @@ def process_single(inchi: str, out_root: Path, name: str, img_id: int):
 
     draw_annotations(atoms, rings, bonds_with_class, out_root / 'ann' / f"{name}.png", out_root / 'png' / f"{name}.png")
     return prepare_coco(atoms, rings, bonds_with_class, name, img_id)
+
+
+def mol_to_png(mol, name, out_root):
+    try:
+        Chem.Kekulize(mol, clearAromaticFlags=True)
+        Chem.SanitizeMol(mol)
+        mol = rdMolDraw2D.PrepareMolForDrawing(mol, kekulize=True)
+    except Exception as e:
+        print(e)
+    svg_text = mol_to_svg(mol)
+    save_svg(svg_text, out_root / 'svg' / f"{name}.svg")
+    svg_to_png(out_root / 'svg' / f"{name}.svg", out_root / 'png' / f"{name}.png")
 
 
 def process_split(path: Path, split: str, name_inchis: List[List[str]]):
@@ -325,16 +329,6 @@ def main():
         Path('/home/egor/Desktop/molecule-recognizer/datasets/sample_train_dataset/train_sample_dataset.csv'),
         1000
     )
-
-
-def trash():
-    inchi = 'InChI=1S/C54H90O6/c1-4-7-10-13-16-19-22-25-26-27-30-32-35-38-41-44-47-53(56)59-50-51(60-54(57)48-45-42-39-36-33-29-24-21-18-15-12-9-6-3)49-58-52(55)46-43-40-37-34-31-28-23-20-17-14-11-8-5-2/h7,10,16,19,25-26,28-29,31,33,37,39-40,42,51H,4-6,8-9,11-15,17-18,20-24,27,30,32,34-36,38,41,43-50H2,1-3H3/b10-7-,19-16-,26-25-,31-28-,33-29-,40-37-,42-39-'
-    mol = MolFromInchi(inchi)
-    inchi = 'InChI=1S/C15H19ClO2/c1-15(8-4-3-5-9-15)14(17)11-6-7-13(18-2)12(16)10-11/h6-7,10H,3-5,8-9H2,1-2H3'
-    inchi = 'InChI=1S/C17H10BrN3O/c18-14-7-3-1-5-11(14)9-12(10-19)16-20-15-8-4-2-6-13(15)17(22)21-16/h1-9,13H/b12-9+'
-    inchi = 'InChI=1S/C25H34N2O7/c1-15-4-5-19-16(2)22(31-23-25(19)18(15)8-11-24(3,32-23)33-34-25)30-21(29)7-6-20(28)27-14-17-9-12-26-13-10-17/h9-10,12-13,15-16,18-19,22-23H,4-8,11,14H2,1-3H3,(H,27,28)/t15-,16-,18+,19+,22-,23-,24+,25+/m1/s1'
-    mol = MolFromInchi(inchi)
-    process_single(inchi, Path('/home/ilia/mol_set'), 'inchi_3', uuid.uuid4().int)
 
 
 if __name__ == '__main__':
