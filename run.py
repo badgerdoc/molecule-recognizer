@@ -4,6 +4,7 @@ from fastai.basic_train import load_learner
 
 from dataset import MoleculesDataset
 from detector.inference import CascadeRCNNInferenceService
+from imago_service.imago import ImagoService
 from pipeline import Pipeline
 
 if __name__ == '__main__':
@@ -17,5 +18,7 @@ if __name__ == '__main__':
     det_model_path = Path('models/epoch_15.pth')
     detector_service = CascadeRCNNInferenceService(det_cfg_path, det_model_path, True)
 
-    pipeline = Pipeline(molecule_dataset, Path('output_new_gen'), gan_model, detector_service)
-    pipeline.process_batch(slice(0, 100))
+    imago = ImagoService(Path('bin/imago_feature_console'))
+
+    pipeline = Pipeline(molecule_dataset, Path('output'), gan_model, detector_service, imago)
+    pipeline.process_batch(slice(0, 5))
