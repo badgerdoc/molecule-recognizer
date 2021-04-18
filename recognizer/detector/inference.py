@@ -4,7 +4,7 @@ from pathlib import Path
 
 from mmdet.apis import init_detector, inference_detector
 
-from detector.utils import has_image_extension, extract_boxes_from_result
+from recognizer.detector.utils import has_image_extension, extract_boxes_from_result
 
 logger = logging.getLogger(__name__)
 DEFAULT_THRESHOLD = 0.7

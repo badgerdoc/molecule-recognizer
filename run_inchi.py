@@ -1,6 +1,6 @@
 from pathlib import Path
-from dataset import MoleculesDataset
-from inchi_pipeline import InchiPipeline
+from recognizer.dataset import MoleculesDataset
+from recognizer.pipelines.inchi_pipeline import InchiPipeline
 
 IN_PATH: Path = Path('datasets/sample_train_dataset/')
 OUT_PATH: Path = Path('inchi_images')

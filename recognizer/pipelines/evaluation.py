@@ -1,5 +1,4 @@
 import os
-import subprocess
 from typing import Optional
 
 import Levenshtein
@@ -9,13 +8,13 @@ import cv2
 from fastai.basic_train import Learner
 from fastai.vision import open_image
 
-from dataset import MoleculesDataset, MoleculesImageItem
+from recognizer.dataset import MoleculesDataset, MoleculesImageItem
 from rdkit import Chem
 
-from detector.inference import CascadeRCNNInferenceService
-from image_processing.normalization import make_even_dimensions
-from imago_service.imago import ImagoService
-from molecules import inchi_to_mol, mol_to_png
+from recognizer.detector.inference import CascadeRCNNInferenceService
+from recognizer.image_processing.normalization import make_even_dimensions
+from recognizer.imago_service.imago import ImagoService
+from recognizer.pipelines.molecules import inchi_to_mol, mol_to_png
 
 
 RESIZED_DIR = 'resized'
@@ -26,7 +25,7 @@ INCHI_DIR = 'inchi'
 IMG_FROM_INCHI_DIR = 'img_from_inchi'
 
 
-class Pipeline:
+class EvaluationPipeline:
     def __init__(
         self,
         dataset: MoleculesDataset,

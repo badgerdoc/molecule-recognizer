@@ -9,6 +9,10 @@ class MoleculesImageItem:
     path: Path
     ground_truth: Optional[str] = None
 
+    @property
+    def svg_name(self):
+        return f'{self.path.stem}.svg'
+
 
 class MoleculesDataset:
     def __init__(self, img_dir: Path, csv_path: Path):

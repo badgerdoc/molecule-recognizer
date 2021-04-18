@@ -1,8 +1,8 @@
 import json
 import os
 from pathlib import Path
-from dataset import MoleculesDataset, MoleculesImageItem
-from molecules import process_single
+from recognizer.dataset import MoleculesDataset, MoleculesImageItem
+from recognizer.pipelines.molecules import process_single
 
 
 ANNOTATIONS_PATH = 'annotations.json'

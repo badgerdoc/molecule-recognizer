@@ -14,6 +14,11 @@ from rdkit.Chem.inchi import MolFromInchi
 from rdkit.Chem.Draw import rdMolDraw2D
 from svgpathtools import svg2paths
 
+from recognizer.image_processing.utils import to_binary_img_naive
+
+# TODO: Remove this module, some of this code was already moved to other modules
+#  move or delete the rest, then remove the module.
+
 
 @dataclass
 class Category:
@@ -198,18 +203,6 @@ def prepare_coco(atoms, rings, bonds_with_class, name, image_id):
     return asdict(img), annotations
 
 
-def to_binary_img(img):
-    img = img.copy()
-    if len(img.shape) == 3 and img.shape[2] > 1:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    bg = img[0][0]
-    mask = img == bg
-    img[mask] = 255
-    mask = img != 255
-    img[mask] = 0
-    return img
-
-
 def add_noise(img, color, percent):
     out_img = img.copy()
     noise = np.random.rand(*out_img.shape[:2])
@@ -226,7 +219,7 @@ def apply_binary_threshold(img, threshold):
 
 def binary_cappification(img):
     img = img.copy()
-    binary_img = to_binary_img(img)
+    binary_img = to_binary_img_naive(img)
     small = cv2.resize(binary_img, (400, 400), cv2.INTER_NEAREST)
     small = add_noise(small, 255, 0.8)
     small = add_noise(small, 0, 0.999)
