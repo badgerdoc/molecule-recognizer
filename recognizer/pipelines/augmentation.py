@@ -1,14 +1,11 @@
 import os
 from pathlib import Path
-from typing import Optional, Tuple, Dict
+from typing import Optional, Tuple
 
 import cv2
 import numpy as np
-from cairosvg import svg2png
-from rdkit.Chem import MolFromInchi
 
 from recognizer.common.molecule_generator import MoleculeImageGenerator
-from recognizer.common.molecule_utils import mol_to_svg, find_atom_bboxes
 from recognizer.dataset import MoleculesDataset, MoleculesImageItem
 from recognizer.image_processing.augmentation import add_noise
 from recognizer.image_processing.utils import to_binary_img_naive, norm_dims_base, \

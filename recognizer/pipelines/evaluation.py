@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional
 
@@ -5,8 +6,6 @@ import Levenshtein
 from pathlib import Path
 
 import cv2
-from fastai.basic_train import Learner
-from fastai.vision import open_image
 
 from recognizer.dataset import MoleculesDataset, MoleculesImageItem
 from rdkit import Chem
@@ -15,7 +14,10 @@ from recognizer.detector.inference import CascadeRCNNInferenceService
 from recognizer.image_processing.normalization import make_even_dimensions
 from recognizer.imago_service.imago import ImagoService
 from recognizer.pipelines.molecules import inchi_to_mol, mol_to_png
+from recognizer.restoration_service.base import BaseRestorationService
 
+# logging.basicConfig(filename='run.log', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 RESIZED_DIR = 'resized'
 RESTORED_DIR = 'restored'
@@ -30,13 +32,13 @@ class EvaluationPipeline:
         self,
         dataset: MoleculesDataset,
         out_path: Path,
-        gan_model: Learner,
+        restoration_service: BaseRestorationService,
         detector: CascadeRCNNInferenceService,
         imago: ImagoService
     ):
         self.dataset = dataset
         self.out_path = out_path
-        self.gan_model = gan_model
+        self.restoration_service = restoration_service
         self.detector = detector
         self.imago = imago
         self._dirs_init = False
@@ -65,10 +67,8 @@ class EvaluationPipeline:
         self.detector.inference_image(img_path, detection_path)
 
     def restore_image(self, resized_img_path: Path, item: MoleculesImageItem) -> Path:
-        img = open_image(resized_img_path)
-        pred = self.gan_model.predict(img)
         restored_path = (self.out_path / RESTORED_DIR) / item.path.name
-        pred[0].save(restored_path)
+        self.restoration_service.restore(resized_img_path, restored_path)
         return restored_path
 
     def get_mol_file(self, item: MoleculesImageItem, img_path: Path) -> Optional[Path]:
@@ -117,14 +117,15 @@ class EvaluationPipeline:
         failed = 0
         for item in items:
             try:
-                total_dist += self.process_item(item)
-                # FIXME: handle exceptions carefully
+                dist = self.process_item(item)
+                logger.info(f'Image {item.path.name}, distance {dist}')
+                total_dist += dist
             except ValueError as e:
                 print(e)
                 failed += 1
         succeeded = (len(items) - failed)
         if succeeded:
-            print(f'Mean distance: {total_dist / succeeded}')
-            print(f'Failed: {failed}')
+            logger.info(f'Mean distance: {total_dist / succeeded}')
+            logger.info(f'Failed: {failed}')
         else:
-            print('All failed')
+            logger.info('All failed')
