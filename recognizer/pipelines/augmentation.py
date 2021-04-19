@@ -7,16 +7,15 @@ import numpy as np
 from cairosvg import svg2png
 from rdkit.Chem import MolFromInchi
 
+from recognizer.common.molecule_generator import MoleculeImageGenerator
 from recognizer.common.molecule_utils import mol_to_svg, find_atom_bboxes
 from recognizer.dataset import MoleculesDataset, MoleculesImageItem
 from recognizer.image_processing.augmentation import add_noise
 from recognizer.image_processing.utils import to_binary_img_naive, norm_dims_base, \
     to_bgr
 
-PNG_DIR = 'png'
 TARGET_DIR = 'target'
 INPUT_DIR = 'input'
-SVG_DIR = 'svg'
 
 TRAIN = 'train'
 VAL = 'val'
@@ -53,16 +52,7 @@ class GanAugmentationPipeline:
         self.out_path = out_path
         self.config = GanAugmentationConfig() if config is None else config
         self.distortion = Distortion()
-        self._create_dirs()
-
-    def _create_dirs(self):
-        for dirname in (
-            PNG_DIR,
-            SVG_DIR,
-        ):
-            self.png_dir = self.out_path / PNG_DIR
-            self.svg_dir = self.out_path / SVG_DIR
-            os.makedirs(self.out_path / dirname, exist_ok=True)
+        self.molecule_generator = MoleculeImageGenerator()
 
     def process_item(self, item: MoleculesImageItem):
         target_img = self.generate_target(item)
@@ -70,34 +60,13 @@ class GanAugmentationPipeline:
         self.save_augmented_img(distorted, target_img, item.path)
 
     def generate_target(self, item: MoleculesImageItem):
-        mol = MolFromInchi(item.ground_truth)
-        target_path = self.png_dir / item.path.name
-        svg_path = self.svg_dir / item.svg_name
-
-        svg_text = mol_to_svg(
-            mol, size=self.config.img_size, bond_length=self.config.bond_length, save_path=svg_path
+        target_img = self.molecule_generator.inchi_to_image(
+            item.ground_truth,
+            img_size=self.config.img_size,
+            bond_length=self.config.bond_length,
         )
-        target_path_str = str(target_path.absolute())
-        svg2png(bytestring=svg_text, write_to=target_path_str)
-        target_img = cv2.imread(target_path_str)
-
-        atom_bboxes = find_atom_bboxes(svg_path)
-        target_img = self._create_padding_around_atoms(target_img, atom_bboxes)
         target_img = self.normalize(target_img)
-        cv2.imwrite(target_path_str, target_img)
         return target_img
-
-    @staticmethod
-    def _create_padding_around_atoms(img, atom_bboxes: Dict[int, Tuple[float]], thk=2):
-        """Ensure that there is distance between bonds and letters."""
-        for box in atom_bboxes.values():
-            x1, x2, y1, y2 = [int(v) for v in box]
-            x1 = x1 - thk
-            y1 = y1 - thk
-            x2 = x2 + thk
-            y2 = y2 + thk
-            img = cv2.rectangle(img, (x1, y1), (x2, y2), (255, 255, 255), thickness=thk)
-        return img
 
     def save_augmented_img(self, distorted, target_img, img_path: Path):
         subset = self._select_subset()
@@ -154,6 +123,7 @@ class Distortion:
         return img
 
     def __call__(self, img):
+        """Apply distortion with different parameters."""
         res = []
         for params in self.distort_params:
             output_img = img.copy()

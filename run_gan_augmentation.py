@@ -12,4 +12,4 @@ if __name__ == '__main__':
         molecule_dataset,
         Path('augmented_dataset')
     )
-    pipeline.process_batch(slice(0, 1000))
+    pipeline.process_batch(slice(0, 25))
