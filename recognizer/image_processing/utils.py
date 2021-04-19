@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import cv2
 from typing import Tuple, Union
 
@@ -100,3 +102,7 @@ def norm_dims_base(img, base, bg=DEFAULT_BG_VALUE):
     h, w = img.shape[:2]
     size = ((h // base + 1) * base, (w // base + 1) * base)
     return resize_with_padding(img, size, bg)
+
+
+def save_img(filepath: Path, img):
+    cv2.imwrite(str(filepath), cv2.cvtColor(img, cv2.COLOR_RGB2BGR))

@@ -1,6 +1,6 @@
 export GAN_MODEL_FILE="gen_8.pkl"
+export MPRNET_MODEL_FILE="mprnet.pth"
 export DET_MODEL_FILE="epoch_15.pth"
-export DET_MODEL_CONFIG="epoch_15.pth"
 export MODEL_DIR="models"
 mkdir -p $MODEL_DIR
 
@@ -9,3 +9,6 @@ mv $GAN_MODEL_FILE $MODEL_DIR
 
 gdown "https://drive.google.com/uc?id=1-kq3ycew6UaqoUqPaqM20sjbIwL1QPey" -O $DET_MODEL_FILE
 mv $DET_MODEL_FILE $MODEL_DIR
+
+gdown "https://drive.google.com/uc?id=1-jDaPmnduoP_fSnA967WjpAi0WWyQssv" -O $MPRNET_MODEL_FILE
+mv $MPRNET_MODEL_FILE $MODEL_DIR
