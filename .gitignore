@@ -3,5 +3,10 @@ venv
 output
 models
 mmdetection
+fonts
+atoms_images
 augmented_dataset
 tests/.pytest_cache
+
+.idea/
+__pycache__/
