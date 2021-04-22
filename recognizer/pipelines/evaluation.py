@@ -24,7 +24,10 @@ RESTORED_DIR = 'restored'
 DETECTION_DIR = 'detected'
 MOL_DIR = 'mol'
 INCHI_DIR = 'inchi'
-IMG_FROM_INCHI_DIR = 'img_from_inchi'
+
+GROUND_TRUTH_DIR = Path('ground_truth')
+IMG_FROM_INCHI_DIR = GROUND_TRUTH_DIR / 'img_from_inchi'
+MOL_FROM_INCHI_DIR = GROUND_TRUTH_DIR / 'mol_from_inchi'
 
 
 class EvaluationPipeline:
@@ -51,6 +54,7 @@ class EvaluationPipeline:
             MOL_DIR,
             INCHI_DIR,
             IMG_FROM_INCHI_DIR,
+            MOL_FROM_INCHI_DIR,
         ):
             os.makedirs(self.out_path / dirname, exist_ok=True)
         self._dirs_init = True
@@ -76,7 +80,8 @@ class EvaluationPipeline:
         self.imago.image_to_mol(img_path, mol_path)
         return mol_path
 
-    def mol_to_inchi(self, mol_path: Path) -> str:
+    @staticmethod
+    def mol_to_inchi(mol_path: Path) -> str:
         mol = Chem.MolFromMolFile(str(mol_path))
         try:
             return Chem.MolToInchi(mol)
@@ -92,16 +97,29 @@ class EvaluationPipeline:
             )
         return dist
 
+    def ground_truth_inchi_to_mol(self, item: MoleculesImageItem) -> Path:
+        mol_path = self.out_path / MOL_FROM_INCHI_DIR / self._get_mol_name(item)
+        with open(mol_path, 'w') as f:
+            mol = inchi_to_mol(item.ground_truth)
+            mol_block = Chem.MolToMolBlock(mol)
+            f.write(str(mol_block))
+        return mol_path
+
     def ground_truth_inchi_to_image(self, item: MoleculesImageItem) -> Path:
         out_img_path = self.out_path / IMG_FROM_INCHI_DIR
         mol = inchi_to_mol(item.ground_truth)
         mol_to_png(mol, item.path.stem, out_img_path)
         return out_img_path
 
+    @staticmethod
+    def _get_mol_name(item: MoleculesImageItem) -> str:
+        return f'{item.path.stem}.mol'
+
     def process_item(self, item: MoleculesImageItem) -> int:
         if not self._dirs_init:
             self._create_dirs()
         self.ground_truth_inchi_to_image(item)
+        self.ground_truth_inchi_to_mol(item)
         resized_img_path = self.resize(item.path)
         self.detect_structure(resized_img_path, item)
         restored_img_path = self.restore_image(resized_img_path, item)
@@ -121,7 +139,7 @@ class EvaluationPipeline:
                 logger.info(f'Image {item.path.name}, distance {dist}')
                 total_dist += dist
             except ValueError as e:
-                print(e)
+                logger.error(e)
                 failed += 1
         succeeded = (len(items) - failed)
         if succeeded:
