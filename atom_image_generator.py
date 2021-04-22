@@ -8,14 +8,24 @@ import cv2
 import numpy as np
 import pandas as pd
 
-from constants import ATOMS_CLASSES
-
+from recognizer.pipelines.augmentation import Distortion
 
 log = logging.getLogger(__name__)
 
+ATOMS_CLASSES = (
+    "Cl",
+    "H",
+    "C",
+    "O",
+    "N",
+    "F",
+    "Br",
+    "S",
+    "Si"
+    )
+
 
 class NoFontException(Exception):
-    """No one font found"""
     def __str__(self):
         return self.__doc__
 
@@ -36,7 +46,7 @@ class AtomImageGeneratorPipeline:
         self.output_names = output_names
         self._make_output_dir()
 
-    def process_batch(self, fonts_amount=None, atoms_list=[]):
+    def process_batch(self, fonts_amount=None, atoms_list=ATOMS_CLASSES):
         fonts = [font for font in self.FONTS_PATH.iterdir()]
         if not len(fonts):
             raise NoFontException()
@@ -44,7 +54,6 @@ class AtomImageGeneratorPipeline:
         all_pictures_data = {}
 
         fonts_amount = fonts_amount or len(fonts)
-        atoms_list = atoms_list or ATOMS_CLASSES
 
         fonts = np.random.permutation(fonts)
 
@@ -72,13 +81,13 @@ class AtomImageGeneratorPipeline:
                 )
 
             batch_pictures_data[picture_hash] = atom
-
             self._save_image(picture_hash, image)
 
         return batch_pictures_data
 
     def _save_image(self, picture_name, image):
         image = np.array(image)
+        image = Distortion().distort_image(image, binary=False, dilated=True)
         cv2.imwrite(
             f"{str(self.OUTPUT_PATH)}/{picture_name}.png",
             image
@@ -111,3 +120,8 @@ class AtomImageGeneratorPipeline:
 
     def _make_output_dir(self):
         os.makedirs(self.OUTPUT_PATH, exist_ok=True)
+
+
+if __name__ == '__main__':
+    p = AtomImageGeneratorPipeline()
+    p.process_batch()
