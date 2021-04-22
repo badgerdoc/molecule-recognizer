@@ -7,16 +7,19 @@ from pathlib import Path
 
 import cv2
 
+from recognizer.common.molecule_generator import MoleculeImageGenerator
 from recognizer.dataset import MoleculesDataset, MoleculesImageItem
 from rdkit import Chem
 
 from recognizer.detector.inference import CascadeRCNNInferenceService
 from recognizer.image_processing.normalization import make_even_dimensions
+from recognizer.image_processing.utils import save_img
 from recognizer.imago_service.imago import ImagoService
-from recognizer.pipelines.molecules import inchi_to_mol, mol_to_png
+from recognizer.pipelines.molecules import inchi_to_mol
 from recognizer.restoration_service.base import BaseRestorationService
 
 # logging.basicConfig(filename='run.log', level=logging.INFO)
+GT_IMG_SIZE = (400, 400)
 logger = logging.getLogger(__name__)
 
 RESIZED_DIR = 'resized'
@@ -44,6 +47,7 @@ class EvaluationPipeline:
         self.restoration_service = restoration_service
         self.detector = detector
         self.imago = imago
+        self.molecule_generator = MoleculeImageGenerator(add_padding=False)
         self._dirs_init = False
 
     def _create_dirs(self):
@@ -105,11 +109,13 @@ class EvaluationPipeline:
             f.write(str(mol_block))
         return mol_path
 
-    def ground_truth_inchi_to_image(self, item: MoleculesImageItem) -> Path:
-        out_img_path = self.out_path / IMG_FROM_INCHI_DIR
-        mol = inchi_to_mol(item.ground_truth)
-        mol_to_png(mol, item.path.stem, out_img_path)
-        return out_img_path
+    def ground_truth_inchi_to_image(self, item: MoleculesImageItem):
+        img_path = self.out_path / IMG_FROM_INCHI_DIR / item.path.name
+        img = self.molecule_generator.inchi_to_image(
+            item.ground_truth,
+            GT_IMG_SIZE
+        )
+        save_img(img_path, img)
 
     @staticmethod
     def _get_mol_name(item: MoleculesImageItem) -> str:

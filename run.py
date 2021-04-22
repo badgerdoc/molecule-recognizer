@@ -29,4 +29,4 @@ if __name__ == '__main__':
         detector_service,
         imago
     )
-    pipeline.process_batch(slice(0, 10))
+    pipeline.process_batch(slice(0, 3))

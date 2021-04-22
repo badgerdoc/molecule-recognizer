@@ -18,6 +18,10 @@ SVG_COORD_REGEXP = r'((\d+\.?\d*)\s(\d+\.?\d*))'
 
 
 class MoleculeImageGenerator:
+
+    def __init__(self, add_padding=True):
+        self.add_padding = add_padding
+
     def inchi_to_image(
         self,
         inchi: str,
@@ -37,7 +41,9 @@ class MoleculeImageGenerator:
         img_stream.seek(0)
         img = cv2.imdecode(np.fromstring(img_stream.read(), np.uint8), 1)
         atom_bboxes = mol_svg.get_atom_bboxes()
-        return self._create_padding_around_atoms(img, atom_bboxes)
+        if self.add_padding:
+            img = self._create_padding_around_atoms(img, atom_bboxes)
+        return img
 
     @staticmethod
     def _create_padding_around_atoms(img, atom_bboxes: Dict[int, Tuple[float]], thk=2):
