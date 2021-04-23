@@ -4,12 +4,12 @@ from pathlib import Path
 
 from mmdet.apis import init_detector, inference_detector
 
-from recognizer.common.boxes import draw_boxes
 from recognizer.common.constants import ATOM_CLS, DOUBLE_CLS, RING_CLS, \
     SINGLE_CLS, TRIPLE_CLS
 from recognizer.detector.structure import DetectedStructure
 from recognizer.detector.utils import validate_image_extension, \
     extract_boxes_from_result
+from recognizer.drawing.boxes import draw_boxes
 
 logger = logging.getLogger(__name__)
 DEFAULT_THRESHOLD = 0.7
