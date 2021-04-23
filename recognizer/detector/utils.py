@@ -34,5 +34,7 @@ def extract_boxes_from_result(result, class_names, score_thr=0.3):
     return instances
 
 
-def has_image_extension(path: Path, allowed_extensions=IMG_EXTENSIONS):
-    return any(path.name.lower().endswith(e.lower()) for e in allowed_extensions)
+def validate_image_extension(path: Path, allowed_extensions=IMG_EXTENSIONS):
+    if not any(path.name.lower().endswith(e.lower()) for e in allowed_extensions):
+        raise ValueError(f'{path} is not an image')
+

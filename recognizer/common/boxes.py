@@ -1,6 +1,7 @@
+import cv2
 from dataclasses import dataclass, field
 
-from typing import Tuple
+from typing import List, Tuple
 
 
 @dataclass
@@ -38,10 +39,10 @@ class BoundaryBox:
 
     def merge(self, bb: "BoundaryBox") -> "BoundaryBox":
         return BoundaryBox(
-            top_left_x=min(self.x1, bb.x1),
-            top_left_y=min(self.y1, bb.y1),
-            bottom_right_x=max(self.x2, bb.x2),
-            bottom_right_y=max(self.y2, bb.y2),
+            x1=min(self.x1, bb.x1),
+            y1=min(self.y1, bb.y1),
+            x2=max(self.x2, bb.x2),
+            y2=max(self.y2, bb.y2),
             confidence=max([self.confidence, bb.confidence]),
         )
 
@@ -70,3 +71,11 @@ class BoundaryBox:
 
     def __getitem__(self, item):
         return self.box[item]
+
+
+def draw_boxes(img, boxes: List[BoundaryBox], color, thk=1):
+    img = img.copy()
+    for box in boxes:
+        x1, y1, x2, y2 = box.box
+        cv2.rectangle(img, (x1, y1), (x2, y2), color, thk)
+    return img

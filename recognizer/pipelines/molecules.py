@@ -14,10 +14,11 @@ from rdkit.Chem.inchi import MolFromInchi
 from rdkit.Chem.Draw import rdMolDraw2D
 from svgpathtools import svg2paths
 
+from recognizer.common.molecule_utils import _merge_bboxes, mol_to_svg
 from recognizer.image_processing.utils import to_binary_img_naive
 
-# TODO: Remove this module, some of this code was already moved to other modules
-#  move or delete the rest, then remove the module.
+# TODO: This module is going to be removed, some of this code was already moved
+#  to molecule_utils.py and molecule_generator.py
 
 
 @dataclass
@@ -43,25 +44,12 @@ CATEGORIES = {
     'ring': Category(2, 'ring', '#38fb5c'),
     'SINGLE': Category(3, 'SINGLE', '#e17282'),
     'DOUBLE': Category(4, 'DOUBLE', '#e17282'),
-    'TRIPLE': Category(5, 'TRIPLE', '#e17282'),
+    'TRIPLE_CLS': Category(5, 'TRIPLE_CLS', '#e17282'),
 }
 
 
 def inchi_to_mol(inchi: str):
     return MolFromInchi(inchi)
-
-
-def mol_to_svg(mol, size=(400, 400), bond_length=27):
-    d2d = rdMolDraw2D.MolDraw2DSVG(size[0], size[1])
-    opts = d2d.drawOptions()
-    opts.fixedBondLength = bond_length
-    opts.bondLineWidth = 1
-    opts.setHighlightColour((0.,0.,0.,0.))
-    opts.setSymbolColour((0.,0.,0.,0.))
-    # opts.fontFile = '/usr/share/fonts/truetype/tlwg/Sawasdee.ttf'
-    d2d.DrawMolecule(mol)
-    d2d.FinishDrawing()
-    return d2d.GetDrawingText()
 
 
 def save_svg(svg: str, svg_out: Path):
@@ -73,22 +61,6 @@ def save_svg(svg: str, svg_out: Path):
 def svg_to_png(svg_path: Path, png_path: Path):
     png_path.parent.mkdir(parents=True, exist_ok=True)
     svg2png(url=str(svg_path.absolute()), write_to=str(png_path.absolute()))
-
-
-def _merge_bboxes(elements: List[Tuple[int, Tuple[float]]]):
-    elem_map = {}
-    for name, bbox in elements:
-        if name in elem_map:
-            bbox_ = elem_map[name]
-            elem_map[name] = (
-                min(bbox_[0], bbox[0]),
-                max(bbox_[1], bbox[1]),
-                min(bbox_[2], bbox[2]),
-                max(bbox_[3], bbox[3]),
-            )
-        else:
-            elem_map[name] = bbox
-    return elem_map
 
 
 def get_svg_features(svg_path: Path):
