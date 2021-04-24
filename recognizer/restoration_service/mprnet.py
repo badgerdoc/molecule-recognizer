@@ -1,6 +1,5 @@
-import os
 from pathlib import Path
-from runpy import run_path
+from recognizer.models.MPRNet import MPRNet
 
 import torch
 
@@ -17,10 +16,7 @@ from recognizer.restoration_service.base import BaseRestorationService
 class MPRNETService(BaseRestorationService):
     def _load_model(self, model_path: Path):
         checkpoint = torch.load(model_path, map_location='cpu')
-        architecture_path = Path(
-            __file__).parent.absolute().parent / 'models' / 'MPRNet.py'
-        load_file = run_path(architecture_path)
-        model = load_file['MPRNet']()
+        model = MPRNet()
         model.load_state_dict(checkpoint['state_dict'])
         return model
 

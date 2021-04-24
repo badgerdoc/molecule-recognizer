@@ -103,15 +103,15 @@ class TextRenderer:
 
     def get_image(self, text: str, canvas_size=(300, 300)):
         tokens = self.tokenize(text)
-        img = Image.new("L", canvas_size, color=255)
-        drawing = ImageDraw.Draw(img)
+        text_as_img = Image.new("L", canvas_size, color=255)
+        drawing = ImageDraw.Draw(text_as_img)
         offset = 0
         for token in tokens:
             offset += self.draw_symbol(offset, drawing, token)
-        img = np.array(img)
+        text_as_img = np.array(text_as_img)
         # FIXME: `extract_content` is kind of overkill, but for the temporary
         #  solution it will work
-        return extract_content(img)
+        return extract_content(text_as_img)
 
     @staticmethod
     def _classify(token: str):
