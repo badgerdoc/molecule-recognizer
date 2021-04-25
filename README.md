@@ -1,29 +1,21 @@
-# Project setup
+## Project setup
 
-[Install miniconda](https://docs.conda.io/en/latest/miniconda.html#linux-installers)
+### Install latest miniconda from bash file 
 
+[Download miniconda](https://docs.conda.io/en/latest/miniconda.html)
+
+### Install dependencies
 ```
-conda install rdkit
-conda install python-Levenshtein
-```
-
-Activate conda environment.
-
-```
-pip install gdown
-pip install fastai==1.0.61 opencv-python
-chmod +x install_mmdet.sh
-./install_mmdet.sh
+conda install -c rdkit rdkit=2020.09.1.0
+conda install -c conda-forge python-levenshtein 
+poetry install
 ```
 
-
-Download assets
-
+### Download assets
 ```
 ./download_models.sh
 ./download_sample_dataset.sh
 ```
 
-# Run
-
+### Run
 ```python run.py```
