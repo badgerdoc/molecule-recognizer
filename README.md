@@ -15,6 +15,7 @@ poetry install
 ```
 ./download_models.sh
 ./download_sample_dataset.sh
+./download_mmcv.sh
 ```
 
 ### Run
