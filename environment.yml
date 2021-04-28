@@ -1,0 +1,6 @@
+channels:
+  - rdkit
+  - conda-forge
+dependencies:
+  - python-levenshtein=0.12.2=py37h7585375_0
+  - rdkit=2020.09.1.0=py37h81f2deb_1
