@@ -9,6 +9,8 @@ from PIL import ImageFont, ImageDraw, Image
 
 from recognizer.image_processing.utils import extract_content, save_img
 
+DEFAULT_CANVAS_SIZE = (300, 300)
+
 SPECIAL_SYMBOL = 'special_symbol'
 
 ATOM_SYMBOL = 'atom_symbol'
@@ -43,6 +45,10 @@ class SpecialSymbol:
 
     @property
     def width(self):
+        if not self.superscript:
+            return len(self.subscript)
+        if not self.subscript:
+            return len(self.superscript)
         return max(len(self.subscript), len(self.superscript))
 
 
@@ -101,7 +107,7 @@ class TextRenderer:
         else:
             raise ValueError(f'Unknown symbol type "{symbol.type_}"')
 
-    def get_image(self, text: str, canvas_size=(300, 300)):
+    def get_image(self, text: str, canvas_size=DEFAULT_CANVAS_SIZE):
         tokens = self.tokenize(text)
         text_as_img = Image.new("L", canvas_size, color=255)
         drawing = ImageDraw.Draw(text_as_img)

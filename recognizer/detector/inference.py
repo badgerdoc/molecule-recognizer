@@ -28,22 +28,19 @@ class CascadeRCNNInferenceService:
 
     def inference_image(
         self,
-        img_path: Path,
-        out_path: Path,
+        img,
         threshold: float = DEFAULT_THRESHOLD,
-    ):
-        validate_image_extension(img_path)
-        logger.info(f"Cascade inference image {img_path}")
-        result = inference_detector(self.model, img_path)
+    ) -> DetectedStructure:
+        result = inference_detector(self.model, img)
         boxes = extract_boxes_from_result(result, CLASS_NAMES, threshold)
         structure = DetectedStructure.from_bboxes_list(boxes)
-        self.visualize_boxes(structure, img_path, out_path)
+        return structure
 
     @staticmethod
     def visualize_boxes(
-        structure: DetectedStructure, img_path: Path, out_path: Path
+        structure: DetectedStructure, img, out_path: Path
     ):
-        img = cv2.imread(str(img_path))
+        img = img.copy()
         img = draw_boxes(img, [a.bbox for a in structure.atoms], (255, 0, 0))
         img = draw_boxes(img, [b.bbox for b in structure.bonds], (0, 255, 0))
         cv2.imwrite(str(out_path.absolute()), img)

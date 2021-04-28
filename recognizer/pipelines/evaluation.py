@@ -19,6 +19,8 @@ from recognizer.pipelines.molecules import inchi_to_mol
 from recognizer.restoration_service.base import BaseRestorationService
 
 # logging.basicConfig(filename='run.log', level=logging.INFO)
+from recognizer.restoration_service.text import TextRestorationService
+
 GT_IMG_SIZE = (400, 400)
 logger = logging.getLogger(__name__)
 
@@ -39,15 +41,19 @@ class EvaluationPipeline:
         dataset: MoleculesDataset,
         out_path: Path,
         restoration_service: BaseRestorationService,
-        detector: CascadeRCNNInferenceService,
-        imago: ImagoService
+        detector: CascadeRCNNInferenceService,  # TODO: Going to be deprecated
+        text_restoration_service: TextRestorationService,
+        imago: ImagoService,
+        restore_text: bool = False
     ):
         self.dataset = dataset
         self.out_path = out_path
         self.restoration_service = restoration_service
         self.detector = detector
+        self.text_restoration_service = text_restoration_service
         self.imago = imago
         self.molecule_generator = MoleculeImageGenerator(add_padding=False)
+        self.restore_text = restore_text
         self._dirs_init = False
 
     def _create_dirs(self):
@@ -68,15 +74,21 @@ class EvaluationPipeline:
         img = make_even_dimensions(img)
         res_img_path = (self.out_path / RESIZED_DIR) / img_path.name
         cv2.imwrite(str(res_img_path), img)
-        return res_img_path
+        return res_img_path, img
 
-    def detect_structure(self, img_path: Path, item: MoleculesImageItem):
+    def detect_structure(self, img, item: MoleculesImageItem):
         detection_path = (self.out_path / DETECTION_DIR) / item.path.name
-        self.detector.inference_image(img_path, detection_path)
+        structure = self.detector.inference_image(img)
+        self.detector.visualize_boxes(structure, img, detection_path)
 
     def restore_image(self, resized_img_path: Path, item: MoleculesImageItem) -> Path:
         restored_path = (self.out_path / RESTORED_DIR) / item.path.name
         self.restoration_service.restore(resized_img_path, restored_path)
+        if self.restore_text:
+            ref_img = cv2.imread(str(restored_path))
+            img = cv2.imread(str(restored_path))
+            restored_img = self.text_restoration_service.restore(ref_img, img)
+            cv2.imwrite(str(restored_path), restored_img)
         return restored_path
 
     def get_mol_file(self, item: MoleculesImageItem, img_path: Path) -> Optional[Path]:
@@ -126,8 +138,8 @@ class EvaluationPipeline:
             self._create_dirs()
         self.ground_truth_inchi_to_image(item)
         self.ground_truth_inchi_to_mol(item)
-        resized_img_path = self.resize(item.path)
-        self.detect_structure(resized_img_path, item)
+        resized_img_path, resized_img = self.resize(item.path)
+        self.detect_structure(resized_img, item)
         restored_img_path = self.restore_image(resized_img_path, item)
         mol_path = self.get_mol_file(item, restored_img_path)
         if not mol_path:
