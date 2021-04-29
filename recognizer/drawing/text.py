@@ -45,10 +45,10 @@ class SpecialSymbol:
 
     @property
     def width(self):
-        if not self.superscript:
-            return len(self.subscript)
-        if not self.subscript:
+        if self.subscript is None:
             return len(self.superscript)
+        elif self.superscript is None:
+            return len(self.subscript)
         return max(len(self.subscript), len(self.superscript))
 
 
