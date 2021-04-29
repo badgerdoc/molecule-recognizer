@@ -44,4 +44,4 @@ class AtomImageItem:
         image = image.draw(renderer=renderer)
         params = [True, False]
         binary, dilated = random.choices(params, k=2)
-        return Distortion.distort_image(image, binary, dilated)
+        return Distortion.distort_image(image, False, dilated)
