@@ -144,7 +144,7 @@ class EvaluationPipeline:
         mol_path = self.get_mol_file(item, restored_img_path)
         if not mol_path:
             raise ValueError(f'Imago failed to parse image {item.path}')
-	return 0
+		return 0
 
     def process_batch(self, _slice: slice = slice(None)):
         items = list(self.dataset.items.values())[_slice]
