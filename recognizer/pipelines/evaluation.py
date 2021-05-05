@@ -136,7 +136,7 @@ class EvaluationPipeline:
     def process_item(self, item: MoleculesImageItem) -> int:
         if not self._dirs_init:
             self._create_dirs()
-        self.ground_truth_inchi_to_image(item)
+#       self.ground_truth_inchi_to_image(item)
         self.ground_truth_inchi_to_mol(item)
         resized_img_path, resized_img = self.resize(item.path)
 #       self.detect_structure(resized_img, item)
@@ -144,8 +144,7 @@ class EvaluationPipeline:
         mol_path = self.get_mol_file(item, restored_img_path)
         if not mol_path:
             raise ValueError(f'Imago failed to parse image {item.path}')
-        inchi = self.mol_to_inchi(mol_path)
-        return self.check_inchi(inchi, item)
+	return 0
 
     def process_batch(self, _slice: slice = slice(None)):
         items = list(self.dataset.items.values())[_slice]
