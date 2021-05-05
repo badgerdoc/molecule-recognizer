@@ -139,7 +139,7 @@ class EvaluationPipeline:
         self.ground_truth_inchi_to_image(item)
         self.ground_truth_inchi_to_mol(item)
         resized_img_path, resized_img = self.resize(item.path)
-        self.detect_structure(resized_img, item)
+#       self.detect_structure(resized_img, item)
         restored_img_path = self.restore_image(resized_img_path, item)
         mol_path = self.get_mol_file(item, restored_img_path)
         if not mol_path:
