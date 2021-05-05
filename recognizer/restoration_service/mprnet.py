@@ -15,7 +15,7 @@ from recognizer.restoration_service.base import BaseRestorationService
 
 class MPRNETService(BaseRestorationService):
     def _load_model(self, model_path: Path):
-        checkpoint = torch.load(model_path, map_location='gpu')
+        checkpoint = torch.load(model_path, map_location='cuda')
         model = MPRNet()
         model.load_state_dict(checkpoint['state_dict'])
         return model
