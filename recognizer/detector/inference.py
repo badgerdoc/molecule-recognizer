@@ -22,7 +22,7 @@ class CascadeRCNNInferenceService:
         self, config: Path, model: Path, should_visualize: bool = False
     ):
         self.model = init_detector(
-            str(config.absolute()), str(model.absolute()), device='cpu'
+            str(config.absolute()), str(model.absolute()), device='gpu'
         )
         self.should_visualize = should_visualize
 
