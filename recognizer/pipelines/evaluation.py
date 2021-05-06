@@ -144,21 +144,22 @@ class EvaluationPipeline:
         mol_path = self.get_mol_file(item, restored_img_path)
         if not mol_path:
             raise ValueError(f'Imago failed to parse image {item.path}')
-	return 0
+        return 0
 
     def process_batch(self, _slice: slice = slice(None)):
         items = list(self.dataset.items.values())[_slice]
         total_dist = 0
         failed = 0
+        succeeded = 0
         for item in items:
             try:
                 dist = self.process_item(item)
-                logger.info(f'Image {item.path.name}, distance {dist}')
+                logger.info(f'Image {item.path.name}, distance {dist}, succeeded {succeeded}')
+                succeeded += 1
                 total_dist += dist
             except ValueError as e:
                 logger.error(e)
                 failed += 1
-        succeeded = (len(items) - failed)
         if succeeded:
             logger.info(f'Mean distance: {total_dist / succeeded}')
             logger.info(f'Failed: {failed}')
