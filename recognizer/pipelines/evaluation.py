@@ -18,21 +18,21 @@ from recognizer.imago_service.imago import ImagoService
 from recognizer.pipelines.molecules import inchi_to_mol
 from recognizer.restoration_service.base import BaseRestorationService
 
-# logging.basicConfig(filename='run.log', level=logging.INFO)
+logging.basicConfig(filename="run.log", level=logging.INFO)
 from recognizer.restoration_service.text import TextRestorationService
 
 GT_IMG_SIZE = (400, 400)
 logger = logging.getLogger(__name__)
 
-RESIZED_DIR = 'resized'
-RESTORED_DIR = 'restored'
-DETECTION_DIR = 'detected'
-MOL_DIR = 'mol'
-INCHI_DIR = 'inchi'
+RESIZED_DIR = "resized"
+RESTORED_DIR = "restored"
+DETECTION_DIR = "detected"
+MOL_DIR = "mol"
+INCHI_DIR = "inchi"
 
-GROUND_TRUTH_DIR = Path('ground_truth')
-IMG_FROM_INCHI_DIR = GROUND_TRUTH_DIR / 'img_from_inchi'
-MOL_FROM_INCHI_DIR = GROUND_TRUTH_DIR / 'mol_from_inchi'
+GROUND_TRUTH_DIR = Path("ground_truth")
+IMG_FROM_INCHI_DIR = GROUND_TRUTH_DIR / "img_from_inchi"
+MOL_FROM_INCHI_DIR = GROUND_TRUTH_DIR / "mol_from_inchi"
 
 
 class EvaluationPipeline:
@@ -44,7 +44,7 @@ class EvaluationPipeline:
         detector: CascadeRCNNInferenceService,  # TODO: Going to be deprecated
         text_restoration_service: TextRestorationService,
         imago: ImagoService,
-        restore_text: bool = False
+        restore_text: bool = False,
     ):
         self.dataset = dataset
         self.out_path = out_path
@@ -92,7 +92,7 @@ class EvaluationPipeline:
         return restored_path
 
     def get_mol_file(self, item: MoleculesImageItem, img_path: Path) -> Optional[Path]:
-        mol_path = (self.out_path / MOL_DIR) / f'{item.path.stem}.mol'
+        mol_path = (self.out_path / MOL_DIR) / f"{item.path.stem}.mol"
         self.imago.image_to_mol(img_path, mol_path)
         return mol_path
 
@@ -106,16 +106,16 @@ class EvaluationPipeline:
 
     def check_inchi(self, inchi: str, item: MoleculesImageItem) -> int:
         dist = Levenshtein.distance(inchi, item.ground_truth)
-        inchi_path = (self.out_path / INCHI_DIR) / f'{item.path.stem}.txt'
-        with open(inchi_path, 'w') as f:
+        inchi_path = (self.out_path / INCHI_DIR) / f"{item.path.stem}.txt"
+        with open(inchi_path, "w") as f:
             f.write(
-                f'Predicted: {inchi}\nGround truth: {item.ground_truth}\nDistance: {dist}'
+                f"Predicted: {inchi}\nGround truth: {item.ground_truth}\nDistance: {dist}"
             )
         return dist
 
     def ground_truth_inchi_to_mol(self, item: MoleculesImageItem) -> Path:
         mol_path = self.out_path / MOL_FROM_INCHI_DIR / self._get_mol_name(item)
-        with open(mol_path, 'w') as f:
+        with open(mol_path, "w") as f:
             mol = inchi_to_mol(item.ground_truth)
             mol_block = Chem.MolToMolBlock(mol)
             f.write(str(mol_block))
@@ -123,27 +123,24 @@ class EvaluationPipeline:
 
     def ground_truth_inchi_to_image(self, item: MoleculesImageItem):
         img_path = self.out_path / IMG_FROM_INCHI_DIR / item.path.name
-        img = self.molecule_generator.inchi_to_image(
-            item.ground_truth,
-            GT_IMG_SIZE
-        )
+        img = self.molecule_generator.inchi_to_image(item.ground_truth, GT_IMG_SIZE)
         save_img(img_path, img)
 
     @staticmethod
     def _get_mol_name(item: MoleculesImageItem) -> str:
-        return f'{item.path.stem}.mol'
+        return f"{item.path.stem}.mol"
 
     def process_item(self, item: MoleculesImageItem) -> int:
         if not self._dirs_init:
             self._create_dirs()
-#       self.ground_truth_inchi_to_image(item)
+        #       self.ground_truth_inchi_to_image(item)
         self.ground_truth_inchi_to_mol(item)
         resized_img_path, resized_img = self.resize(item.path)
-#       self.detect_structure(resized_img, item)
+        #       self.detect_structure(resized_img, item)
         restored_img_path = self.restore_image(resized_img_path, item)
         mol_path = self.get_mol_file(item, restored_img_path)
         if not mol_path:
-            raise ValueError(f'Imago failed to parse image {item.path}')
+            raise ValueError(f"Imago failed to parse image {item.path}")
         return 0
 
     def process_batch(self, _slice: slice = slice(None)):
@@ -154,14 +151,16 @@ class EvaluationPipeline:
         for item in items:
             try:
                 dist = self.process_item(item)
-                logger.info(f'Image {item.path.name}, distance {dist}, succeeded {succeeded}')
+                logger.info(
+                    f"Image {item.path.name}, distance {dist}, succeeded {succeeded}"
+                )
                 succeeded += 1
                 total_dist += dist
             except ValueError as e:
                 logger.error(e)
                 failed += 1
         if succeeded:
-            logger.info(f'Mean distance: {total_dist / succeeded}')
-            logger.info(f'Failed: {failed}')
+            logger.info(f"Mean distance: {total_dist / succeeded}")
+            logger.info(f"Failed: {failed}")
         else:
-            logger.info('All failed')
+            logger.info("All failed")
