@@ -9,4 +9,4 @@ rm gpu_dataset.zip
 mkdir "content"
 ```
 
-Download `prep_train.pkl` from Colab notebook to `content` folder.
+Download `prep_train.pkl` from Colab notebook to `content` folder
