@@ -1,12 +1,3 @@
-datasets
-venv
-output
-models
-mmdetection
-fonts
-atoms_images
-augmented_dataset
-tests/.pytest_cache
-
-.idea/
-__pycache__/
+image_captioning/venv
+gpu_dataset.zip
+bms_fold_0

@@ -1,42 +1,16 @@
-## Project setup
+# Installation
 
-### Install miniconda for Python 3.8 from bash file 
-
-[Download miniconda](https://docs.conda.io/en/latest/miniconda.html)
-
-Run installation
 ```bash
-./Miniconda3-latest-Linux-x86_64.sh
-```
-### Create local conda environment
-Only python 3.7 will work
-```bash
-conda env create -f environment.yml -p ./.mol_rec python=3.7
-conda activate ./.mol_rec
+python3 -m virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+./download_dataset
+rm gpu_dataset.zip
+mkdir "content"
 ```
 
-### Install poetry dependencies
-```bash
-./download_mmcv.sh
-poetry install
-```
+Download `prep_train.pkl` from Colab notebook to `content` folder
 
-### Download assets
-```bash
-./download_models.sh
-./download_sample_dataset.sh
-```
+### Optional
 
-### Run
-```bash
-python run.py
-```
-
-##FAQ
-
-### How to run bash files  
-#### Linux
-```bash
-chmod +x <filename>.sh
-./<filename>.sh
-```
+Install `pydantic` plugin for pycharm.
