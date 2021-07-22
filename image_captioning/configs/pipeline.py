@@ -1,0 +1,54 @@
+from pathlib import Path
+from typing import Any, Dict
+
+from pydantic import BaseModel
+
+
+class DatasetConfig(BaseModel):
+    labels_path: Path
+    images_path: Path
+    n_fold: int
+
+
+class CheckpointConfig(BaseModel):
+    # TODO: implement best checkpoint storage functionality
+    #  disallow to remove best checkpoint even if it is old according to `number_to_keep`, keep it until better
+    #  candidate emerges.
+
+    # TODO: store configuration and logs with checkpoints, or have one log file to append records to
+    frequency: int
+    number_to_keep: int
+    resume_from: str = 'latest'  # | 'best'
+
+
+class OptimizerConfig(BaseModel):
+    lr: float
+    wd: float
+
+
+class SchedulerConfig(BaseModel):
+    name: str
+    params: Dict[str, Any]
+
+
+class PipelineConfig(BaseModel):
+    workdir: Path
+    dataset: DatasetConfig
+    checkpoint: CheckpointConfig
+
+    encoder_train: OptimizerConfig
+    decoder_train: OptimizerConfig
+    scheduler: SchedulerConfig
+
+    seed: int
+    epochs: int
+    batch_size: int
+    num_workers: int
+
+    print_frequency: int
+    gradient_accumulation_steps: int
+    max_grad_norm: int
+
+    @property
+    def checkpoint_path(self) -> Path:
+        return self.workdir / 'checkpoints'
