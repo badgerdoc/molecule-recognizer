@@ -54,3 +54,11 @@ class PipelineConfig(BaseModel, RegisteredConfigMixin):
     @property
     def checkpoint_path(self) -> Path:
         return self.workdir / 'checkpoints'
+
+    @property
+    def tokenizer_path(self) -> Path:
+        return self.workdir.parent / 'tokenizer.pth'
+
+    @property
+    def preprocessed_train_df_path(self) -> Path:
+        return self.workdir.parent / 'content/prep_train.pkl'

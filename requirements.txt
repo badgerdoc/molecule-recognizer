@@ -12,3 +12,6 @@ sentencepiece
 sacremoses
 transformers
 gdown
+click
+pandas
+numpy

@@ -1,17 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Type, TypeVar, Dict, Union, Optional
+from typing import Tuple, Type, Dict, Union
 import torch.nn as nn
 
 from pydantic import BaseModel
 
 
-ModelType = TypeVar('ModelType', bound=Type[Union['ConfigurableModel', nn.Module]])
-ModelConfigType = TypeVar('ModelConfigType', bound=Type['MLModelBaseConfig'])
-
-
 class ConfigurableModel:
-    """A base class for models that can be created from config."""
-    name: Optional[str] = None
 
     @classmethod
     @abstractmethod
@@ -20,60 +14,28 @@ class ConfigurableModel:
 
 
 class LibRegistry:
-    """
-    A singleton that stores mappings:
-    For models: name: str -> cls: Type
-    For configs: cls_name: str -> cls: Type
-    """
-    class __Registry:
-        def __init__(self):
-            self.models: Dict[str, ModelType] = {}
-            self.configs: Dict[str, ModelConfigType] = {}
+    models: Dict[str, Type[Union[ConfigurableModel, nn.Module]]] = {}
+    configs: Dict[str, Type['MLModelBaseConfig']] = {}
 
-    _instance: Optional[__Registry] = None
-
-    def __init__(self):
-        if LibRegistry._instance is None:
-            LibRegistry._instance = LibRegistry.__Registry()
-
-    def get_model(self, name: str) -> ModelType:
-        cls = self._instance.models.get(name)
-        if not cls:
-            raise KeyError(f'No model registered under the name "{name}" in LibRegistry.')
-        return cls
-
-    def add_model(self, name: str, cls: ModelType):
-        if self._instance.models.get(name):
-            raise KeyError(
-                f'Trying to register multiple models with name "{name}".'
-            )
-        elif not issubclass(cls, ConfigurableModel):
-            raise TypeError(
-                f'Can not register "{name}" because {cls.__name__}'
-                f'is not subclass of {ConfigurableModel.__name__}.'
-            )
-        self._instance.models[name] = cls
-
-    def get_config(self, name: str) -> ModelConfigType:
-        cls = self._instance.configs.get(name)
-        if not cls:
-            raise KeyError(f'No config registered under the name "{name}" in LibRegistry.')
-        return cls
-
-    def add_config(self, name: str, cls: ModelConfigType):
-        if self._instance.configs.get(name):
-            raise KeyError(
-                f'Trying to register multiple configs with name "{name}".'
-            )
-        self._instance.configs[name] = cls
+    def __new__(cls, *args, **kwargs):
+        raise TypeError('LibRegistry can not be instantiated.')
 
     def __init_subclass__(cls, **kwargs):
         raise TypeError('LibRegistry can not be subclassed.')
 
 
-def _register(cls: ModelType, name: str):
+def _register(cls: Type[nn.Module], name: str):
+    if LibRegistry.models.get(name):
+        raise KeyError(
+            f'Trying to assign same name "{name}" to multiple models with `register_model` decorator.'
+        )
+    elif not issubclass(cls, ConfigurableModel):
+        raise TypeError(
+            f'Can not register "{name}" because {cls.__name__}'
+            f'is not subclass of {ConfigurableModel.__name__}.'
+        )
+    LibRegistry.models[name] = cls
     cls.name = name
-    LibRegistry().add_model(name, cls)
     return cls
 
 
@@ -84,10 +46,12 @@ def register_model(name: str):
     return wrap
 
 
-def get_model(config: 'MLModelBaseConfig') -> ModelType:
-    """Construct model from its config."""
+def get_model(config: 'MLModelBaseConfig') -> Type[Union[ConfigurableModel, nn.Module]]:
+    """
+    Construct model from configuration file.
+    """
     name = config.name
-    cls = LibRegistry().get_model(name)
+    cls = LibRegistry.models.get(name)
     if not cls:
         raise KeyError(
             f'Could not find a class associated with name "{name}". If there is a '
@@ -99,11 +63,15 @@ def get_model(config: 'MLModelBaseConfig') -> ModelType:
 
 
 class RegisteredConfigMixin:
-    """Registers config subclasses in LibRegistry."""
 
     def __init_subclass__(cls, **kwargs):
         cls_name = cls.__name__
-        LibRegistry().add_config(cls_name, cls)
+        if not LibRegistry.configs.get(cls_name):
+            LibRegistry.configs[cls_name] = cls
+        else:
+            raise KeyError(
+                f'Config class "{cls_name}" already registered in `LibRegistry`.'
+            )
 
 
 class MLModelBaseConfig(BaseModel, ABC, RegisteredConfigMixin):
@@ -112,10 +80,6 @@ class MLModelBaseConfig(BaseModel, ABC, RegisteredConfigMixin):
     @property
     @abstractmethod
     def id(self) -> str:
-        """
-        A string consisting of model's name and most important parameters, used to identify
-        the model in checkpoints folder.
-        """
         return
 
 

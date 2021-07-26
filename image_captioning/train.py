@@ -23,10 +23,12 @@ from image_captioning.utils.training import train_loop
 def main():
     # TODO: replace prints with logging
     tokenizer_path = Path(
-        '/Users/Egor_Osinkin/projects/molecule-recognizer/tokenizer.pth'
+        # '/Users/Egor_Osinkin/projects/molecule-recognizer/tokenizer.pth'
+        'D:\\Nata\\dev\\molecule-recognizer\\tokenizer.pth'
     )
     preprocessed_train_df = Path(
-        '/Users/Egor_Osinkin/projects/molecule-recognizer/content/prep_train.pkl'
+        # '/Users/Egor_Osinkin/projects/molecule-recognizer/content/prep_train.pkl'
+        'D:\\Nata\\dev\\molecule-recognizer\\content\\prep_train.pkl'
     )
     tokenizer: Tokenizer = torch.load(tokenizer_path)
     prep_train_df = pd.read_pickle(preprocessed_train_df)
@@ -34,19 +36,22 @@ def main():
 
     pipeline_config = PipelineConfig(
         workdir=Path(
-            '/Users/Egor_Osinkin/projects/molecule-recognizer/workdir'
+            # '/Users/Egor_Osinkin/projects/molecule-recognizer/workdir'
+            'D:\\Nata\\dev\\molecule-recognizer\\workdir'
         ),
         dataset=DatasetConfig(
             labels_path=Path(
-                '/Users/Egor_Osinkin/projects/molecule-recognizer/bms_fold_0/train.csv'
+                # '/Users/Egor_Osinkin/projects/molecule-recognizer/bms_fold_0/train.csv'
+                'D:\\Nata\\dev\\molecule-recognizer\\bms_fold_0\\train.csv'
             ),
             images_path=Path(
-                '/Users/Egor_Osinkin/projects/molecule-recognizer/bms_fold_0/train'
+                # '/Users/Egor_Osinkin/projects/molecule-recognizer/bms_fold_0/train'
+                'D:\\Nata\\dev\\molecule-recognizer\\bms_fold_0\\train'
             ),
             n_fold=5,
         ),
         checkpoint=CheckpointConfig(
-            frequency=500,
+            frequency=1,
             number_to_keep=5,
             resume_from='latest',  # TODO: implement resume functionality
         ),
