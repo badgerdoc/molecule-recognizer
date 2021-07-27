@@ -19,7 +19,6 @@ class EfficientNetV2Encoder(nn.Module, ConfigurableModel):
 
     def forward(self, x):
         features = self.efficient_net.extract_features(x)
-        features = features.permute(0, 2, 3, 1)
         return features
 
     @staticmethod

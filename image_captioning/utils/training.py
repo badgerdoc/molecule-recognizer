@@ -1,11 +1,13 @@
 import time
 from typing import TYPE_CHECKING
 
+import Levenshtein
 import numpy as np
 import torch
 import torch.nn as nn
 from albumentations import Compose, Normalize, Resize
 from albumentations.pytorch import ToTensorV2
+from matplotlib import pyplot as plt
 from torch.nn.utils.rnn import pack_padded_sequence
 from torch.optim import Adam
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -43,8 +45,8 @@ def generate_square_subsequent_mask(sz, device):
     mask = (torch.triu(torch.ones((sz, sz), device=device)) == 1).transpose(0, 1)
     mask = (
         mask.float()
-        .masked_fill(mask == 0, float('-inf'))
-        .masked_fill(mask == 1, float(0.0))
+            .masked_fill(mask == 0, float('-inf'))
+            .masked_fill(mask == 1, float(0.0))
     )
     return mask
 
@@ -78,15 +80,15 @@ def get_scheduler(optimizer, pipeline_config: 'PipelineConfig'):
 
 
 def train_loop(
-    encoder,
-    decoder,
-    folds: 'DataFrame',
-    validation_fold: int,
-    tokenizer: Tokenizer,
-    device: str,
-    pipeline_config: 'PipelineConfig',
-    encoder_config: 'EncoderBaseConfig',
-    decoder_config: 'DecoderBaseConfig',
+        encoder,
+        decoder,
+        folds: 'DataFrame',
+        validation_fold: int,
+        tokenizer: Tokenizer,
+        device: str,
+        pipeline_config: 'PipelineConfig',
+        encoder_config: 'EncoderBaseConfig',
+        decoder_config: 'DecoderBaseConfig',
 ):
     print(f'========== fold: {validation_fold} training ==========')
 
@@ -156,42 +158,43 @@ def train_loop(
     best_loss = np.inf
 
     for epoch in range(pipeline_config.epochs):
-
         start_time = time.time()
 
         avg_loss = train_fn(
-            train_loader,
-            encoder,
-            decoder,
-            criterion,
-            encoder_optimizer,
-            decoder_optimizer,
-            epoch,
-            encoder_scheduler,
-            decoder_scheduler,
-            device,
-            tokenizer,
-            pipeline_config,
-            encoder_config,
-            decoder_config,
+           train_loader,
+           encoder,
+           decoder,
+           criterion,
+           encoder_optimizer,
+           decoder_optimizer,
+           epoch,
+           encoder_scheduler,
+           decoder_scheduler,
+           device,
+           tokenizer,
+           pipeline_config,
+           encoder_config,
+           decoder_config,
         )
+
+        print(valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device))
 
 
 def train_fn(
-    train_loader,
-    encoder,
-    decoder,
-    criterion,
-    encoder_optimizer,
-    decoder_optimizer,
-    epoch,
-    encoder_scheduler,
-    decoder_scheduler,
-    device,
-    tokenizer,
-    pipeline_config: 'PipelineConfig',
-    encoder_config: 'EncoderBaseConfig',
-    decoder_config: 'DecoderBaseConfig',
+        train_loader,
+        encoder,
+        decoder,
+        criterion,
+        encoder_optimizer,
+        decoder_optimizer,
+        epoch,
+        encoder_scheduler,
+        decoder_scheduler,
+        device,
+        tokenizer,
+        pipeline_config: 'PipelineConfig',
+        encoder_config: 'EncoderBaseConfig',
+        decoder_config: 'DecoderBaseConfig',
 ) -> float:
     train_info = TrainingInfo(len(train_loader), pipeline_config)
 
@@ -206,34 +209,35 @@ def train_fn(
 
         images = images.to(device)
         labels = labels.to(device)
-        label_lengths = label_lengths.to(device)
         batch_size = images.size(0)
 
         features = encoder(images)
 
         # Sort all tensors by the length of target label
         label_lengths, sort_ind = label_lengths.squeeze(1).sort(dim=0, descending=True)
+        label_lengths = (label_lengths - 1)
+
         features = features[sort_ind]
         labels = labels[sort_ind]
 
-        tgt_mask, tgt_padding_mask = create_mask(labels, tokenizer, device)
+        targets_input = labels[:, :-1]
+        targets_output = labels[:, 1:]
+
+        tgt_mask, tgt_padding_mask = create_mask(targets_input, tokenizer, device)
         output = decoder(
             src=features,
-            tgt=labels,
+            tgt=targets_input,
             tgt_mask=tgt_mask,
             tgt_padding_mask=tgt_padding_mask,
             memory_key_padding_mask=None,
         )
 
-        # Remove "start of sequence" token
-        targets = labels[:, :]  # Fixme: remove start token
-        output = output[:, :, :]
-
         predictions = output.permute(1, 0, 2)
+
         # FIXME: (not tested on GPU yet) if crushes during training on GPU, send `label_lengths` to CPU.
         predictions = _get_padded_sequence(predictions, label_lengths)
-        targets = _get_padded_sequence(targets, label_lengths)
-        loss = criterion(predictions, targets)
+        targets_output = _get_padded_sequence(targets_output, label_lengths)
+        loss = criterion(predictions, targets_output)
 
         # Record loss
         train_info.losses.update(loss.item(), batch_size)
@@ -260,8 +264,8 @@ def train_fn(
         prev_batch_end = batch_end
 
         if step != 0 and (
-            step % pipeline_config.print_frequency == 0
-            or step == (len(train_loader) - 1)
+                step % pipeline_config.print_frequency == 0
+                or step == (len(train_loader) - 1)
         ):
             train_info.print_stats(
                 encoder_scheduler,
@@ -273,9 +277,9 @@ def train_fn(
                 step,
             )
         if (
-            step != 0
-            and step % pipeline_config.checkpoint.frequency == 0
-            or step == (len(train_loader) - 1)
+                step != 0
+                and step % pipeline_config.checkpoint.frequency == 0
+                or step == (len(train_loader) - 1)
         ):
             save_checkpoint(
                 'latest',  # TODO: use timestamp, when "keep n checkpoints" logic is implemented.
@@ -288,10 +292,70 @@ def train_fn(
     return train_info.losses.avg
 
 
+def valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device, batch_size=1, num_workers=2):
+    valid_loader = DataLoader(
+        valid_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
+        drop_last=False,
+    )
+
+    encoder.eval()
+    decoder.eval()
+
+    max_length = 300
+
+    for i, images in enumerate(valid_loader):
+        batch_size = images.size(0)
+        ys = torch.full((batch_size, 1), tokenizer.stoi["<sos>"], dtype=torch.long).to(device)
+        images = images.to(device)
+
+        # plt.imshow(images.cpu().squeeze().permute(1, 2, 0))
+        # plt.title(valid_labels[i])
+        # plt.savefig(f'image_{i}.png')
+
+        with torch.no_grad():
+            features = encoder(images)
+            features.to(device)
+            # plt.imshow(features.cpu().squeeze().reshape(130, 1792))
+            # plt.title(valid_labels[i])
+            # plt.savefig(f'feature_{i}.png')
+
+            memory = decoder.encode(features)
+            # plt.imshow(memory.cpu().squeeze())
+            # plt.title(valid_labels[i])
+            # plt.savefig(f'memory_{i}.png')
+
+            for j in range(max_length - 1):
+                out = decoder.decode(ys, memory)
+                pred = decoder.generator(out)
+                _, next_token = torch.max(pred, dim=2)
+                ys = torch.cat((ys, next_token[-1].unsqueeze(1)), dim=1)
+                if next_token[-1].item() == tokenizer.stoi["<eos>"]:
+                    break
+
+            text_preds = [tokenizer.predict_caption(ys[i].tolist()) for i in range(len(ys))]
+            text_preds = [f"InChI=1S/{text[5:]}" for text in text_preds]
+            print(text_preds)
+            print(valid_labels[i:i+batch_size])
+            score = get_score(valid_labels[i:i+batch_size], text_preds)
+            print(score)
+            print()
+
+
+def get_score(y_true, y_pred):
+    scores = []
+    for true, pred in zip(y_true, y_pred):
+        score = Levenshtein.distance(true, pred)
+        scores.append(score)
+    avg_score = np.mean(scores)
+    return avg_score
+
+
 def _get_padded_sequence(predictions, label_lengths):
-    return pack_padded_sequence(
-        predictions, label_lengths.view(-1), batch_first=True
-    ).data
+    return pack_padded_sequence(predictions, label_lengths.view(-1), batch_first=True).data
 
 
 class TrainingInfo:
@@ -303,14 +367,14 @@ class TrainingInfo:
         self.config = config
 
     def print_stats(
-        self,
-        encoder_scheduler,
-        decoder_scheduler,
-        decoder_grad_norm,
-        encoder_grad_norm,
-        epoch,
-        start,
-        step,
+            self,
+            encoder_scheduler,
+            decoder_scheduler,
+            decoder_grad_norm,
+            encoder_grad_norm,
+            epoch,
+            start,
+            step,
     ):
         print(
             (
@@ -318,7 +382,7 @@ class TrainingInfo:
                 'Data loading: {data_time.val:.3f} ({data_time.avg:.3f}) '
                 'Batch time: {batch_time.val:.3f} ({batch_time.avg:.3f}) '
                 'Elapsed {remain:s} '
-                'Loss: {loss.val:.4f}({loss.avg:.4f}) '
+                'Loss: {loss.val:.6f}({loss.avg:.6f}) '
                 'Encoder Grad: {encoder_grad_norm:.4f}  '
                 'Decoder Grad: {decoder_grad_norm:.4f}  '
                 'Encoder LR: {encoder_lr:.6f}  '

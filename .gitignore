@@ -4,6 +4,6 @@ bms_fold_0
 .idea/
 __pycache__/
 venv
-/content/
-/tokenizer.pth
-/workdir/
+tokenizer.pth
+workdir
+content
