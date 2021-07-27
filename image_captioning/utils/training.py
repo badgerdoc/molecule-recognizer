@@ -213,7 +213,7 @@ def train_fn(
         # Measure data loading time
         train_info.data_time.update(time.time() - prev_batch_end)
 
-        if pipeline_config.checkpoint.load_from_checkpoint and step % 1000 and trained_steps > step == 0:
+        if pipeline_config.checkpoint.load_from_checkpoint and step % 1000 == 0 and trained_steps >= step:
             print(f"{step} Skipped")
 
         if pipeline_config.checkpoint.load_from_checkpoint and trained_steps > step:
@@ -309,22 +309,14 @@ def train_fn(
     return train_info.losses.avg
 
 
-def valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device, batch_size=1, num_workers=2):
-    valid_loader = DataLoader(
-        valid_dataset,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=num_workers,
-        pin_memory=True,
-        drop_last=False,
-    )
+def valid_fn(valid_loader, encoder, decoder, tokenizer, valid_labels, device, batch_size=1, num_workers=2):
 
     encoder.eval()
     decoder.eval()
 
     text_preds = []
     max_length = 300
-    val_slice = 1000
+    val_slice = 100
     for i, images in enumerate(valid_loader):
         batch_size = images.size(0)
         ys = torch.full((batch_size, 1), tokenizer.sos_idx, dtype=torch.long).to(device)

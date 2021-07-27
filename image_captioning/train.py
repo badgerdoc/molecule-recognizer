@@ -38,7 +38,7 @@ def main():
             validation_fold=2
         ),
         checkpoint=CheckpointConfig(
-            load_from_checkpoint=False,
+            load_from_checkpoint=True,
             frequency=500,
             number_to_keep=5,
             resume_from='latest',  # TODO: implement resume functionality
@@ -46,7 +46,7 @@ def main():
             samples_trained=4
         ),
         encoder_train=OptimizerConfig(lr=1e-4, wd=1e-6),
-        decoder_train=OptimizerConfig(lr=3e-5, wd=1e-6),
+        decoder_train=OptimizerConfig(lr=5e-5, wd=1e-6),
         scheduler=SchedulerConfig(
             name='CosineAnnealingLR', params={'T_max': 4, 'eta_min': 1e-6}
         ),
