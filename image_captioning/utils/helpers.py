@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from image_captioning.base import LibRegistry
 from image_captioning.constants import PIPELINE_CONFIG_YML, DECODER_CONFIG_YML, ENCODER_CONFIG_YML, DECODER_FILENAME, \
     ENCODER_FILENAME
+from image_captioning.exceptions import FolderDoesNotExist
 
 CFG_CLS = '_cfg_cls'
 
@@ -71,13 +72,6 @@ def _add_cfg_class(data: dict, config: BaseModel) -> dict:
     return data
 
 
-def _get_cfg_class(data: dict):
-    cls = LibRegistry.configs.get(data[CFG_CLS])
-    if not cls:
-        raise KeyError(f'Config class "{data[CFG_CLS]}" not found in `LibRegistry`.')
-    return cls
-
-
 def save_config(config: BaseModel, file_path: Path):
     with open(file_path, 'w') as f:
         f.write(
@@ -95,7 +89,7 @@ def save_config(config: BaseModel, file_path: Path):
 def load_config(file_path: Union[Path, str]):
     with open(file_path, 'r') as f:
         data = yaml.load(f)
-        cls = _get_cfg_class(data)
+        cls = LibRegistry().get_config(data[CFG_CLS])
         data.pop(CFG_CLS)
         return cls(**data)
 
@@ -121,14 +115,15 @@ def save_checkpoint(
     print(f'\nSaved checkpoint: {checkpoint}\n')
 
 
-# def load_models(postfix):
-#     os.makedirs(CFG.latest_checkpoint, exist_ok=True)
-#     enc_pth = CFG.latest_checkpoint / f'encoder_{postfix}.pth'
-#     dec_pth = CFG.latest_checkpoint / f'decoder_{postfix}.pth'
-#     encoder = torch.load(enc_pth)
-#     decoder = torch.load(dec_pth)
-#     print(f'\nLoaded models:\n{enc_pth}\n{dec_pth}\n')
-#     return encoder, decoder
+def load_checkpoint(checkpoint: Path, device: str):
+    if not os.path.exists(checkpoint):
+        raise FolderDoesNotExist(f"Checkpoint folder at {checkpoint} doesn't exist.")
+
+    encoder = torch.load(checkpoint / ENCODER_FILENAME, map_location=device)
+    decoder = torch.load(checkpoint / DECODER_FILENAME, map_location=device)
+
+    print(f'\nLoaded checkpoint: {checkpoint}\n')
+    return encoder, decoder
 
 
 def seed_torch(seed=42):
