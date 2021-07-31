@@ -101,16 +101,28 @@ class Tokenizer(object):
         return captions
 
     @property
-    def sos_idx(self):
+    def sos_idx(self) -> int:
         return self.stoi[SOS]
 
     @property
-    def eos_idx(self):
+    def eos_idx(self) -> int:
         return self.stoi[EOS]
 
     @property
-    def pad_idx(self):
+    def pad_idx(self) -> int:
         return self.stoi[PAD]
+
+    @property
+    def sos(self) -> str:
+        return SOS
+
+    @property
+    def eos(self) -> str:
+        return EOS
+
+    @property
+    def pad(self) -> str:
+        return PAD
 
 
 def create_tokenizer_and_df(train_df, tokenizer_path: Path, preprocessed_df_path: Path):

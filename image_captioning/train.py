@@ -23,10 +23,10 @@ from image_captioning.utils.training import train_loop
 def main():
     # TODO: replace prints with logging
     tokenizer_path = Path(
-        'tokenizer.pth'
+        '/Users/Egor_Osinkin/projects/molecule-recognizer/tokenizer.pth'
     )
     preprocessed_train_df = Path(
-        'content/prep_train.pkl'
+        '/Users/Egor_Osinkin/projects/molecule-recognizer/content/prep_train.pkl'
     )
     tokenizer: Tokenizer = torch.load(tokenizer_path)
     prep_train_df = pd.read_pickle(preprocessed_train_df)
@@ -34,19 +34,19 @@ def main():
 
     pipeline_config = PipelineConfig(
         workdir=Path(
-            'workdir'
+            '/Users/Egor_Osinkin/projects/molecule-recognizer/workdir'
         ),
         dataset=DatasetConfig(
             labels_path=Path(
-                'bms_fold_0/train.csv'
+                '/Users/Egor_Osinkin/projects/molecule-recognizer/bms_fold_0/train.csv'
             ),
             images_path=Path(
-                'bms_fold_0/train'
+                '/Users/Egor_Osinkin/projects/molecule-recognizer/bms_fold_0/train'
             ),
             n_fold=5,
         ),
         checkpoint=CheckpointConfig(
-            frequency=1,
+            frequency=500,
             number_to_keep=5,
             resume_from='latest',  # TODO: implement resume functionality
         ),

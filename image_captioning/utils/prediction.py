@@ -3,23 +3,12 @@ from typing import Union
 import cv2
 import torch
 import numpy as np
-import os
 from pathlib import Path
 
-from image_captioning.exceptions import FolderDoesNotExist
 from image_captioning.utils.training import get_transforms
 from image_captioning.tokenizer import Tokenizer
-from image_captioning.utils.helpers import load_config
-from image_captioning.constants import ENCODER_CONFIG_YML, DECODER_FILENAME, ENCODER_FILENAME
-
-
-def get_encoder_decoder_with_transforms(checkpoint_path: Path, device: str):
-    if not os.path.exists(checkpoint_path):
-        raise FolderDoesNotExist(f"Checkpoint folder at {checkpoint_path} doesn't exist.")
-    encoder_config = load_config(checkpoint_path / ENCODER_CONFIG_YML)
-    encoder = torch.load(checkpoint_path / ENCODER_FILENAME, map_location=device)
-    decoder = torch.load(checkpoint_path / DECODER_FILENAME, map_location=device)
-    return encoder, decoder, get_transforms(encoder_config)
+from image_captioning.utils.helpers import load_config, load_checkpoint
+from image_captioning.constants import ENCODER_CONFIG_YML
 
 
 def greedy_decode(decoder, feature, max_len, tokenizer, device) -> str:
@@ -37,7 +26,7 @@ def greedy_decode(decoder, feature, max_len, tokenizer, device) -> str:
         ys = torch.cat([ys, torch.ones(1, 1).fill_(next_word)], dim=0)
         if next_word == tokenizer.eos_idx:
             break
-    return "".join([tokenizer.predict_caption(ys[i].tolist()) for i in range(len(ys))]).replace('<sos>', "")
+    return "".join([tokenizer.predict_caption(ys[i].tolist()) for i in range(len(ys))]).replace(tokenizer.sos, "")
 
 
 def predict_caption(
@@ -64,7 +53,9 @@ def main():
     sample_img_path = project_dir / 'bms_fold_0/train/0/0/0/000b73470c57.png'
 
     tokenizer: Tokenizer = torch.load(tokenizer_path)
-    encoder, decoder, image_transforms = get_encoder_decoder_with_transforms(checkpoint_path, device)
+    encoder, decoder = load_checkpoint(checkpoint_path, device)
+    encoder_config = load_config(checkpoint_path / ENCODER_CONFIG_YML)
+    image_transforms = get_transforms(encoder_config)
 
     print(predict_caption(img_path=sample_img_path, encoder=encoder, decoder=decoder,
                           image_transforms=image_transforms, tokenizer=tokenizer, device=device))
