@@ -4,25 +4,24 @@ import os
 import random
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 import torch
 import yaml
 from pydantic import BaseModel
+from image_captioning.base import LibRegistry
+from image_captioning.constants import PIPELINE_CONFIG_YML, DECODER_CONFIG_YML, ENCODER_CONFIG_YML, DECODER_FILENAME, \
+    ENCODER_FILENAME
+
+CFG_CLS = '_cfg_cls'
 
 if TYPE_CHECKING:
-    from image_captioning.models.base import (
+    from image_captioning.base import (
         DecoderBaseConfig,
-        EncoderBaseConfig,
-    )
-    from image_captioning.configs.pipeline import PipelineConfig
-
-PIPELINE_CONFIG_YML = 'pipeline_config.yml'
-DECODER_CONFIG_YML = 'decoder_config.yml'
-ENCODER_CONFIG_YML = 'encoder_config.yml'
-DECODER_FILENAME = 'decoder.pth'
-ENCODER_FILENAME = 'encoder.pth'
+        EncoderBaseConfig
+)
+    from image_captioning.pipeline.config import PipelineConfig
 
 
 class AverageMeter(object):
@@ -67,15 +66,38 @@ def get_model_id(
     return f'{encoder_config.id}_{decoder_config.id}'
 
 
+def _add_cfg_class(data: dict, config: BaseModel) -> dict:
+    data[CFG_CLS] = config.__class__.__name__
+    return data
+
+
+def _get_cfg_class(data: dict):
+    cls = LibRegistry.configs.get(data[CFG_CLS])
+    if not cls:
+        raise KeyError(f'Config class "{data[CFG_CLS]}" not found in `LibRegistry`.')
+    return cls
+
+
 def save_config(config: BaseModel, file_path: Path):
     with open(file_path, 'w') as f:
         f.write(
             yaml.dump(
-                data=json.loads(
-                    config.json()  # Converting to json first to simulate yaml.safe_dump, which does not work here
+                data=_add_cfg_class(
+                    json.loads(
+                        config.json()  # Converting to json first to simulate yaml.safe_dump, which does not work here
+                    ),
+                    config
                 )
             )
         )
+
+
+def load_config(file_path: Union[Path, str]):
+    with open(file_path, 'r') as f:
+        data = yaml.load(f)
+        cls = _get_cfg_class(data)
+        data.pop(CFG_CLS)
+        return cls(**data)
 
 
 def save_checkpoint(

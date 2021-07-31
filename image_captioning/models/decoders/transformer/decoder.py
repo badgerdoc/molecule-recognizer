@@ -49,6 +49,11 @@ class CaptionTransformer(nn.Module, ConfigurableModel):
         outs = self.transformer(src, tgt_emb, None, tgt_mask, None, None, tgt_padding_mask, memory_key_padding_mask)
         return self.generator(outs)
 
+    def encode(self, src: Tensor, src_mask: Tensor = None):
+        batch_size = src.shape[0]
+        src = src.view(batch_size, -1, 1792)
+        return self.transformer.encoder(src)
+
     def decode(
         self,
         tgt: Tensor,

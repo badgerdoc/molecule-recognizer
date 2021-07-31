@@ -1,0 +1,5 @@
+PIPELINE_CONFIG_YML = 'pipeline_config.yml'
+DECODER_CONFIG_YML = 'decoder_config.yml'
+ENCODER_CONFIG_YML = 'encoder_config.yml'
+DECODER_FILENAME = 'decoder.pth'
+ENCODER_FILENAME = 'encoder.pth'

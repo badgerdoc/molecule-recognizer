@@ -3,6 +3,8 @@ from typing import Any, Dict
 
 from pydantic import BaseModel
 
+from image_captioning.base import RegisteredConfigMixin
+
 
 class DatasetConfig(BaseModel):
     labels_path: Path
@@ -31,7 +33,7 @@ class SchedulerConfig(BaseModel):
     params: Dict[str, Any]
 
 
-class PipelineConfig(BaseModel):
+class PipelineConfig(BaseModel, RegisteredConfigMixin):
     workdir: Path
     dataset: DatasetConfig
     checkpoint: CheckpointConfig
