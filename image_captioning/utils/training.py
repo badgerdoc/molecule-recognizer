@@ -22,8 +22,8 @@ from image_captioning.utils.helpers import (
 if TYPE_CHECKING:
     from pandas import DataFrame
 
-    from image_captioning.models.base import EncoderBaseConfig, DecoderBaseConfig
-    from image_captioning.configs.pipeline import PipelineConfig
+    from image_captioning.base import EncoderBaseConfig, DecoderBaseConfig
+    from image_captioning.pipeline.config import PipelineConfig
 
 
 def get_transforms(encoder_config: 'EncoderBaseConfig'):

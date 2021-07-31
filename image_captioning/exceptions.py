@@ -1,0 +1,2 @@
+class FolderDoesNotExist(Exception):
+    pass

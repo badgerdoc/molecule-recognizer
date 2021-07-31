@@ -1,4 +1,4 @@
-from image_captioning.models.base import EncoderBaseConfig
+from image_captioning.base import EncoderBaseConfig
 
 
 class EfficientNetV2Config(EncoderBaseConfig):

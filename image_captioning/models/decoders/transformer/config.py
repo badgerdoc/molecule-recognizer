@@ -1,4 +1,4 @@
-from image_captioning.models.base import DecoderBaseConfig
+from image_captioning.base import DecoderBaseConfig
 
 
 class CaptionTransformerConfig(DecoderBaseConfig):

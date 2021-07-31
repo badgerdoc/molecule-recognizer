@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from image_captioning.models.base import register_model, ConfigurableModel
+from image_captioning.base import register_model, ConfigurableModel
 from image_captioning.models.encoders.efficient_net_v2.config import EfficientNetV2Config
 from image_captioning.models.encoders.efficient_net_v2.model import custom_effnetv2_xl, custom_effnetv2_l
 

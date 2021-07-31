@@ -5,7 +5,7 @@ import torch
 from sklearn.model_selection import StratifiedKFold
 
 from image_captioning import get_model, EfficientNetV2Config, CaptionTransformerConfig
-from image_captioning.configs.pipeline import (
+from image_captioning.pipeline.config import (
     CheckpointConfig,
     DatasetConfig,
     OptimizerConfig,
@@ -23,10 +23,10 @@ from image_captioning.utils.training import train_loop
 def main():
     # TODO: replace prints with logging
     tokenizer_path = Path(
-        '/Users/Egor_Osinkin/projects/molecule-recognizer/tokenizer.pth'
+        'tokenizer.pth'
     )
     preprocessed_train_df = Path(
-        '/Users/Egor_Osinkin/projects/molecule-recognizer/content/prep_train.pkl'
+        'content/prep_train.pkl'
     )
     tokenizer: Tokenizer = torch.load(tokenizer_path)
     prep_train_df = pd.read_pickle(preprocessed_train_df)
@@ -34,19 +34,19 @@ def main():
 
     pipeline_config = PipelineConfig(
         workdir=Path(
-            '/Users/Egor_Osinkin/projects/molecule-recognizer/workdir'
+            'workdir'
         ),
         dataset=DatasetConfig(
             labels_path=Path(
-                '/Users/Egor_Osinkin/projects/molecule-recognizer/bms_fold_0/train.csv'
+                'bms_fold_0/train.csv'
             ),
             images_path=Path(
-                '/Users/Egor_Osinkin/projects/molecule-recognizer/bms_fold_0/train'
+                'bms_fold_0/train'
             ),
             n_fold=5,
         ),
         checkpoint=CheckpointConfig(
-            frequency=500,
+            frequency=1,
             number_to_keep=5,
             resume_from='latest',  # TODO: implement resume functionality
         ),
