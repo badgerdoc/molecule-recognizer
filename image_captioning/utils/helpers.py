@@ -4,7 +4,7 @@ import os
 import random
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
@@ -86,9 +86,9 @@ def save_config(config: BaseModel, file_path: Path):
         )
 
 
-def load_config(file_path: Union[Path, str]):
+def load_config(file_path: Path):
     with open(file_path, 'r') as f:
-        data = yaml.load(f)
+        data = yaml.load(f)  # warning. could be replaced by safe_load?
         cls = LibRegistry().get_config(data[CFG_CLS])
         data.pop(CFG_CLS)
         return cls(**data)
@@ -123,6 +123,19 @@ def load_checkpoint(checkpoint: Path, device: str):
     decoder = torch.load(checkpoint / DECODER_FILENAME, map_location=device)
 
     print(f'\nLoaded checkpoint: {checkpoint}\n')
+    return encoder, decoder
+
+
+def load_models(name, encoder_config: 'EncoderBaseConfig', decoder_config: 'DecoderBaseConfig',
+                pipeline_config: 'PipelineConfig'):
+    # FIXME Reuse load_checkpoint
+    model_id = get_model_id(encoder_config, decoder_config)
+    checkpoint = pipeline_config.checkpoint_path / model_id / name
+    enc_pth = checkpoint / ENCODER_FILENAME
+    dec_pth = checkpoint / DECODER_FILENAME
+    encoder = torch.load(enc_pth)
+    decoder = torch.load(dec_pth)
+    print(f'\nLoaded models:\n{enc_pth}\n{dec_pth}\n')
     return encoder, decoder
 
 

@@ -1,3 +1,9 @@
 image_captioning/venv
 gpu_dataset.zip
 bms_fold_0
+.idea/
+__pycache__/
+venv
+/content/
+/tokenizer.pth
+/workdir/
