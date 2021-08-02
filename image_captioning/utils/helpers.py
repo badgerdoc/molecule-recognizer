@@ -72,13 +72,6 @@ def _add_cfg_class(data: dict, config: BaseModel) -> dict:
     return data
 
 
-def _get_cfg_class(data: dict):
-    cls = LibRegistry.configs.get(data[CFG_CLS])
-    if not cls:
-        raise KeyError(f'Config class "{data[CFG_CLS]}" not found in `LibRegistry`.')
-    return cls
-
-
 def save_config(config: BaseModel, file_path: Path):
     with open(file_path, 'w') as f:
         f.write(
@@ -96,7 +89,7 @@ def save_config(config: BaseModel, file_path: Path):
 def load_config(file_path: Path):
     with open(file_path, 'r') as f:
         data = yaml.load(f)  # warning. could be replaced by safe_load?
-        cls = _get_cfg_class(data)
+        cls = LibRegistry().get_config(data[CFG_CLS])
         data.pop(CFG_CLS)
         return cls(**data)
 
