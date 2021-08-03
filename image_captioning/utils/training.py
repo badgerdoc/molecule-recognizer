@@ -160,22 +160,22 @@ def train_loop(
     for epoch in range(pipeline_config.epochs):
         start_time = time.time()
 
-        avg_loss = train_fn(
-           train_loader,
-           encoder,
-           decoder,
-           criterion,
-           encoder_optimizer,
-           decoder_optimizer,
-           epoch,
-           encoder_scheduler,
-           decoder_scheduler,
-           device,
-           tokenizer,
-           pipeline_config,
-           encoder_config,
-           decoder_config,
-        )
+        # avg_loss = train_fn(
+        #    train_loader,
+        #    encoder,
+        #    decoder,
+        #    criterion,
+        #    encoder_optimizer,
+        #    decoder_optimizer,
+        #    epoch,
+        #    encoder_scheduler,
+        #    decoder_scheduler,
+        #    device,
+        #    tokenizer,
+        #    pipeline_config,
+        #    encoder_config,
+        #    decoder_config,
+        # )
 
         print(valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device))
 
@@ -309,7 +309,7 @@ def valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device, b
 
     for i, images in enumerate(valid_loader):
         batch_size = images.size(0)
-        ys = torch.full((batch_size, 1), tokenizer.stoi["<sos>"], dtype=torch.long).to(device)
+        ys = torch.full((batch_size, 1), tokenizer.sos_idx, dtype=torch.long).to(device)
         images = images.to(device)
 
         # plt.imshow(images.cpu().squeeze().permute(1, 2, 0))
@@ -333,7 +333,7 @@ def valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device, b
                 pred = decoder.generator(out)
                 _, next_token = torch.max(pred, dim=2)
                 ys = torch.cat((ys, next_token[-1].unsqueeze(1)), dim=1)
-                if next_token[-1].item() == tokenizer.stoi["<eos>"]:
+                if next_token[-1].item() == tokenizer.eos_idx:
                     break
 
             text_preds = [tokenizer.predict_caption(ys[i].tolist()) for i in range(len(ys))]
