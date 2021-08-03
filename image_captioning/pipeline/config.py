@@ -18,6 +18,7 @@ class CheckpointConfig(BaseModel):
     #  candidate emerges.
 
     # TODO: store configuration and logs with checkpoints, or have one log file to append records to
+    load_from_checkpoint: bool
     frequency: int
     number_to_keep: int
     resume_from: str = 'latest'  # | 'best'

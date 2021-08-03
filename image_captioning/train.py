@@ -16,53 +16,39 @@ from image_captioning.pipeline.config import (
 from image_captioning.models.encoders.efficient_net_v2.encoder import EFFNET_V2_L
 
 from image_captioning.tokenizer import Tokenizer
-from image_captioning.utils.helpers import seed_torch
+from image_captioning.utils.helpers import seed_torch, load_models
 from image_captioning.utils.training import train_loop
 
 
 def main():
     # TODO: replace prints with logging
-    tokenizer_path = Path(
-        # '/Users/Egor_Osinkin/projects/molecule-recognizer/tokenizer.pth'
-        'D:\\Nata\\dev\\molecule-recognizer\\tokenizer.pth'
-    )
-    preprocessed_train_df = Path(
-        # '/Users/Egor_Osinkin/projects/molecule-recognizer/content/prep_train.pkl'
-        'D:\\Nata\\dev\\molecule-recognizer\\content\\prep_train.pkl'
-    )
+    tokenizer_path = Path(r'D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\tokenizer.pth')
+    preprocessed_train_df = Path(r'D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\content\prep_train.pkl')
     tokenizer: Tokenizer = torch.load(tokenizer_path)
     prep_train_df = pd.read_pickle(preprocessed_train_df)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     pipeline_config = PipelineConfig(
-        workdir=Path(
-            # '/Users/Egor_Osinkin/projects/molecule-recognizer/workdir'
-            'D:\\Nata\\dev\\molecule-recognizer\\workdir'
-        ),
+        workdir=Path(r'D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\workdir'),
         dataset=DatasetConfig(
-            labels_path=Path(
-                # '/Users/Egor_Osinkin/projects/molecule-recognizer/bms_fold_0/train.csv'
-                'D:\\Nata\\dev\\molecule-recognizer\\bms_fold_0\\train.csv'
-            ),
-            images_path=Path(
-                # '/Users/Egor_Osinkin/projects/molecule-recognizer/bms_fold_0/train'
-                'D:\\Nata\\dev\\molecule-recognizer\\bms_fold_0\\train'
-            ),
+            labels_path=Path(r'D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\bms_fold_0\train.csv'),
+            images_path=Path(r'D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\bms_fold_0\train'),
             n_fold=5,
         ),
         checkpoint=CheckpointConfig(
-            frequency=1,
+            load_from_checkpoint=True,
+            frequency=500,
             number_to_keep=5,
             resume_from='latest',  # TODO: implement resume functionality
         ),
         encoder_train=OptimizerConfig(lr=1e-4, wd=1e-6),
-        decoder_train=OptimizerConfig(lr=4e-4, wd=1e-6),
+        decoder_train=OptimizerConfig(lr=3e-5, wd=1e-6),
         scheduler=SchedulerConfig(
             name='CosineAnnealingLR', params={'T_max': 4, 'eta_min': 1e-6}
         ),
         seed=1,
         epochs=1,
-        batch_size=3,
+        batch_size=4,
         num_workers=2,
         print_frequency=1,
         gradient_accumulation_steps=1,
@@ -76,15 +62,20 @@ def main():
         name='transformer-encoder-decoder',
         num_encoder_layers=3,
         num_decoder_layers=3,
-        emb_size=1792,
+        features_size=1792,
+        emb_size=512,
         nhead=8,
         tgt_vocab_size=len(tokenizer.itos),
         dim_feedforward=512,
         dropout=0.1,
     )
 
-    encoder = get_model(encoder_config)
-    decoder = get_model(decoder_config)
+    if not pipeline_config.checkpoint.load_from_checkpoint:
+        encoder = get_model(encoder_config)
+        decoder = get_model(decoder_config)
+        print("WARNING: NO LOADING!")
+    else:
+        encoder, decoder = load_models("latest", encoder_config, decoder_config, pipeline_config)
 
     folds = split_df_into_folds(prep_train_df, pipeline_config)
 
