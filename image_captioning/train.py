@@ -22,17 +22,18 @@ from image_captioning.utils.training import train_loop
 
 def main():
     # TODO: replace prints with logging
-    tokenizer_path = Path(r'D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\tokenizer.pth')
-    preprocessed_train_df = Path(r'D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\content\prep_train.pkl')
+    project_dir = Path(r'D:\EPAM\EpamLab\MolecularRecognition')
+    tokenizer_path = Path(project_dir / r'molecule-recognizer\tokenizer.pth')
+    preprocessed_train_df = Path(project_dir / r'molecule-recognizer\content\prep_train.pkl')
     tokenizer: Tokenizer = torch.load(tokenizer_path)
     prep_train_df = pd.read_pickle(preprocessed_train_df)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     pipeline_config = PipelineConfig(
-        workdir=Path(r'D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\workdir'),
+        workdir=Path(project_dir / r'molecule-recognizer\workdir'),
         dataset=DatasetConfig(
-            labels_path=Path(r'D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\bms_fold_0\train.csv'),
-            images_path=Path(r'D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\bms_fold_0\train'),
+            labels_path=Path(project_dir / r'molecule-recognizer\bms_fold_0\train.csv'),
+            images_path=Path(project_dir / r'molecule-recognizer\bms_fold_0\train'),
             n_fold=5,
         ),
         checkpoint=CheckpointConfig(

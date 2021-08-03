@@ -160,22 +160,22 @@ def train_loop(
     for epoch in range(pipeline_config.epochs):
         start_time = time.time()
 
-        # avg_loss = train_fn(
-        #    train_loader,
-        #    encoder,
-        #    decoder,
-        #    criterion,
-        #    encoder_optimizer,
-        #    decoder_optimizer,
-        #    epoch,
-        #    encoder_scheduler,
-        #    decoder_scheduler,
-        #    device,
-        #    tokenizer,
-        #    pipeline_config,
-        #    encoder_config,
-        #    decoder_config,
-        # )
+        avg_loss = train_fn(
+           train_loader,
+           encoder,
+           decoder,
+           criterion,
+           encoder_optimizer,
+           decoder_optimizer,
+           epoch,
+           encoder_scheduler,
+           decoder_scheduler,
+           device,
+           tokenizer,
+           pipeline_config,
+           encoder_config,
+           decoder_config,
+        )
 
         print(valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device))
 
