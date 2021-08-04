@@ -17,12 +17,13 @@ def greedy_decode(decoder, feature, max_len, tokenizer, device) -> str:
     memory = decoder.encode(feature)
     ys = torch.ones(1, 1).fill_(tokenizer.sos_idx).type(torch.long).to(device)
     for i in range(max_len - 1):
-        out = decoder.decode(ys, memory, None)
+        ys = ys.view(1, -1)
+        out = decoder.decode(ys, memory)
         out = out.transpose(0, 1)
         prob = decoder.generator(out[:, -1])
         _, next_word = torch.max(prob, dim=1)
-        next_word = next_word.item()
-
+        next_word = next_word[-1].item()
+        ys = ys.view(-1, 1)
         ys = torch.cat([ys, torch.ones(1, 1).fill_(next_word)], dim=0)
         if next_word == tokenizer.eos_idx:
             break
@@ -47,7 +48,7 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Absolute paths should be used
-    project_dir = Path('/Users/Egor_Osinkin/projects/molecule-recognizer/')
+    project_dir = Path('/home/polina/Education/epam_python/lab/molecule-recognizer/image_captioning')
     tokenizer_path = project_dir / 'tokenizer.pth'
     checkpoint_path = project_dir / 'workdir/checkpoints/effnetv2_l_300x400_transformer-encoder-decoder/latest/'
     sample_img_path = project_dir / 'bms_fold_0/train/0/0/0/000b73470c57.png'
