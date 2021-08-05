@@ -177,7 +177,7 @@ def train_loop(
            decoder_config,
         )
 
-        print(valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device))
+        valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device)
 
 
 def train_fn(
@@ -212,6 +212,12 @@ def train_fn(
 
         # Measure data loading time
         train_info.data_time.update(time.time() - prev_batch_end)
+
+        if pipeline_config.checkpoint.load_from_checkpoint and step % 1000 and trained_steps > step == 0:
+            print(f"{step} Skipped")
+
+        if pipeline_config.checkpoint.load_from_checkpoint and trained_steps > step:
+            continue
 
         images = images.to(device)
         labels = labels.to(device)
@@ -316,8 +322,9 @@ def valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device, b
     encoder.eval()
     decoder.eval()
 
+    text_preds = []
     max_length = 300
-
+    val_slice = 1000
     for i, images in enumerate(valid_loader):
         batch_size = images.size(0)
         ys = torch.full((batch_size, 1), tokenizer.sos_idx, dtype=torch.long).to(device)
@@ -347,13 +354,18 @@ def valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device, b
                 if next_token[-1].item() == tokenizer.eos_idx:
                     break
 
-            text_preds = [tokenizer.predict_caption(ys[i].tolist()) for i in range(len(ys))]
-            text_preds = [f"InChI=1S/{text[5:]}" for text in text_preds]
-            print(text_preds)
-            print(valid_labels[i:i+batch_size])
-            score = get_score(valid_labels[i:i+batch_size], text_preds)
-            print(score)
-            print()
+            text_preds.append(ys.squeeze().tolist())
+
+        if i == val_slice:
+            break
+
+    text_preds = tokenizer.predict_captions(text_preds)
+    text_preds = [f"InChI=1S/{text[5:]}" for text in text_preds]
+    # print(text_preds)
+    # print(valid_labels[i:i+batch_size])
+    score = get_score(valid_labels[:val_slice+1], text_preds)
+    print(score)
+    print()
 
 
 def get_score(y_true, y_pred):

@@ -35,9 +35,10 @@ def main():
             labels_path=Path(project_dir / r'molecule-recognizer\bms_fold_0\train.csv'),
             images_path=Path(project_dir / r'molecule-recognizer\bms_fold_0\train'),
             n_fold=5,
+            validation_fold=2
         ),
         checkpoint=CheckpointConfig(
-            load_from_checkpoint=True,
+            load_from_checkpoint=False,
             frequency=500,
             number_to_keep=5,
             resume_from='latest',  # TODO: implement resume functionality

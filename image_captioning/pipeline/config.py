@@ -10,6 +10,7 @@ class DatasetConfig(BaseModel):
     labels_path: Path
     images_path: Path
     n_fold: int
+    validation_fold: int
 
 
 class CheckpointConfig(BaseModel):
