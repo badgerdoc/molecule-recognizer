@@ -67,7 +67,7 @@ class CaptionTransformer(nn.Module, ConfigurableModel):
         src = self.project(src)
         src = self.image_pos_encoding(src)
         src = src.permute(0, 2, 3, 1)
-        src = src.view(-1, batch_size, self.emb_size)
+        src = src.reshape(-1, batch_size, self.emb_size)
         return self.transformer.encoder(src)
 
     def decode(self, tgt: Tensor, memory: Tensor, tgt_mask: Tensor = None):

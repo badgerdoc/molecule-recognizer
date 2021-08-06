@@ -115,7 +115,7 @@ def save_checkpoint(
     print(f'\nSaved checkpoint: {checkpoint}\n')
 
 
-def load_checkpoint(checkpoint: Path, device: str):
+def load_checkpoint(checkpoint: Path, device: torch.device):
     if not os.path.exists(checkpoint):
         raise FolderDoesNotExist(f"Checkpoint folder at {checkpoint} doesn't exist.")
 

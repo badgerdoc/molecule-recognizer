@@ -35,6 +35,7 @@ def main():
             labels_path=Path(project_dir / r'molecule-recognizer\bms_fold_0\train.csv'),
             images_path=Path(project_dir / r'molecule-recognizer\bms_fold_0\train'),
             n_fold=5,
+            validation_fold=2
         ),
         checkpoint=CheckpointConfig(
             load_from_checkpoint=True,
@@ -42,10 +43,10 @@ def main():
             number_to_keep=5,
             resume_from='latest',  # TODO: implement resume functionality
             skip_steps=True,
-            samples_trained=4
+            samples_trained=1376000
         ),
         encoder_train=OptimizerConfig(lr=1e-4, wd=1e-6),
-        decoder_train=OptimizerConfig(lr=3e-5, wd=1e-6),
+        decoder_train=OptimizerConfig(lr=3e-6, wd=1e-6),
         scheduler=SchedulerConfig(
             name='CosineAnnealingLR', params={'T_max': 4, 'eta_min': 1e-6}
         ),
