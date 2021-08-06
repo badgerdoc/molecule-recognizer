@@ -41,6 +41,8 @@ def main():
             frequency=500,
             number_to_keep=5,
             resume_from='latest',  # TODO: implement resume functionality
+            skip_steps=True,
+            samples_trained=4
         ),
         encoder_train=OptimizerConfig(lr=1e-4, wd=1e-6),
         decoder_train=OptimizerConfig(lr=3e-5, wd=1e-6),

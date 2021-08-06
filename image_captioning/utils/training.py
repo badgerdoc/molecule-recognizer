@@ -203,7 +203,13 @@ def train_fn(
 
     dataset_processing_start = prev_batch_end = time.time()
     global_step = 0
+
+    trained_steps = pipeline_config.checkpoint.samples_trained // pipeline_config.batch_size
+
     for step, (images, labels, label_lengths) in enumerate(train_loader):
+        if pipeline_config.checkpoint.skip_steps and trained_steps > step:
+            continue
+
         # Measure data loading time
         train_info.data_time.update(time.time() - prev_batch_end)
 
@@ -257,6 +263,11 @@ def train_fn(
             encoder_optimizer.zero_grad()
             decoder_optimizer.zero_grad()
             global_step += 1
+            if pipeline_config.checkpoint.skip_steps:
+                samples_trained = (trained_steps + global_step) * batch_size
+                pipeline_config.checkpoint.samples_trained = samples_trained
+            elif trained_steps < global_step:
+                pipeline_config.checkpoint.samples_trained = global_step * batch_size
 
         # Measure batch processing time
         batch_end = time.time()
