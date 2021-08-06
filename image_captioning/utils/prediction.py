@@ -44,23 +44,20 @@ def predict_caption(
     return greedy_decode(decoder, feature, max_len=num_tokens, tokenizer=tokenizer, device=device)
 
 
-def main():
+def get_prediction(img: Path, checkpoint: Path):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Absolute paths should be used
     project_dir = Path('/home/polina/Education/epam_python/lab/molecule-recognizer/image_captioning')
     tokenizer_path = project_dir / 'tokenizer.pth'
-    checkpoint_path = project_dir / 'workdir/checkpoints/effnetv2_l_300x400_transformer-encoder-decoder/latest/'
-    sample_img_path = project_dir / 'bms_fold_0/train/0/0/0/000b73470c57.png'
-
     tokenizer: Tokenizer = torch.load(tokenizer_path)
-    encoder, decoder = load_checkpoint(checkpoint_path, device)
-    encoder_config = load_config(checkpoint_path / ENCODER_CONFIG_YML)
+    encoder, decoder = load_checkpoint(checkpoint, device)
+    encoder_config = load_config(checkpoint / ENCODER_CONFIG_YML)
     image_transforms = get_transforms(encoder_config)
 
-    print(predict_caption(img_path=sample_img_path, encoder=encoder, decoder=decoder,
+    print(predict_caption(img_path=img, encoder=encoder, decoder=decoder,
                           image_transforms=image_transforms, tokenizer=tokenizer, device=device))
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     get_prediction()

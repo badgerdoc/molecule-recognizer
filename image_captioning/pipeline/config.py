@@ -22,6 +22,8 @@ class CheckpointConfig(BaseModel):
     frequency: int
     number_to_keep: int
     resume_from: str = 'latest'  # | 'best'
+    skip_steps: bool
+    samples_trained: int
 
 
 class OptimizerConfig(BaseModel):

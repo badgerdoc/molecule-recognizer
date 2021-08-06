@@ -3,8 +3,7 @@ from pathlib import Path
 import pandas as pd
 import torch
 
-from image_captioning import (CaptionTransformerConfig, EfficientNetV2Config,
-                              get_model)
+from image_captioning import get_model
 from image_captioning.tokenizer import Tokenizer
 from image_captioning.train import split_df_into_folds
 from image_captioning.utils.helpers import seed_torch, load_config, load_models, PIPELINE_CONFIG_YML, \
@@ -40,10 +39,12 @@ def create_new_model(pipeline: Path, encoder: Path, decoder: Path):
     )
 
 
-def resume_from(checkpoint: Path):
+def resume_from(checkpoint: Path, skip_steps: bool):
     pipeline_cfg = load_config(Path(checkpoint / PIPELINE_CONFIG_YML))
     encoder_cfg = load_config(Path(checkpoint / ENCODER_CONFIG_YML))
     decoder_cfg = load_config(Path(checkpoint / DECODER_CONFIG_YML))
+
+    pipeline_cfg.checkpoint.skip_steps = skip_steps
 
     tokenizer: Tokenizer = torch.load(pipeline_cfg.tokenizer_path)
     prep_train_df = pd.read_pickle(pipeline_cfg.preprocessed_train_df_path)
