@@ -4,7 +4,7 @@ import torch
 from pathlib import Path
 from torch.utils.data import DataLoader
 
-from image_captioning.constants import ENCODER_CONFIG_YML
+from image_captioning.constants import ENCODER_CONFIG_YML, PIPELINE_CONFIG_YML
 from image_captioning.datasets import TestDataset
 from image_captioning.tokenizer import Tokenizer
 from image_captioning.train import split_df_into_folds
@@ -12,11 +12,10 @@ from image_captioning.utils.helpers import load_config, load_checkpoint, seed_to
 from image_captioning.utils.training import get_transforms, valid_fn
 
 
-def evaluate(pipeline: Path, checkpoint: Path):
+def evaluate(checkpoint: Path):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    pipeline_cfg = load_config(Path(pipeline))
-    checkpoint = Path(checkpoint)
+    pipeline_cfg = load_config(checkpoint / PIPELINE_CONFIG_YML)
 
     project_dir = Path(r'D:\EPAM\EpamLab\MolecularRecognition')
     tokenizer_path = project_dir / 'tokenizer.pth'
