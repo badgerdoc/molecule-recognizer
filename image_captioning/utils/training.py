@@ -207,10 +207,9 @@ def train_fn(
     trained_steps = pipeline_config.checkpoint.samples_trained // pipeline_config.batch_size
 
     for step, (images, labels, label_lengths) in enumerate(train_loader):
-        if pipeline_config.checkpoint.skip_steps and step % 1000 == 0 and trained_steps >= step:
-            print(f"{step} Skipped")
-
         if pipeline_config.checkpoint.skip_steps and trained_steps > step:
+            if pipeline_config.checkpoint.skip_steps and step % 1000 == 0 and trained_steps >= step:
+                print(f"{step} Skipped")
             continue
 
         # Measure data loading time
