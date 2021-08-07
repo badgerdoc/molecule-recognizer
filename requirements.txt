@@ -18,3 +18,4 @@ sklearn~=0.0
 opencv-python~=4.5.3.56
 scikit-learn~=0.24.2
 click
+streamlit=0.86.0
