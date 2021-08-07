@@ -26,3 +26,9 @@ Example of usage (new model creation):
 ```bash
 python cli.py new --pipeline=<pipeline_config.yml> --encoder=<encoder_config.yml> --decoder=<decoder_config.yml>
 ```
+
+### Streamlit demo launch
+
+```bash
+streamlit run demo_streamlit.py
+```

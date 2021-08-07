@@ -120,7 +120,7 @@ class MLModelBaseConfig(BaseModel, ABC, RegisteredConfigMixin):
 
 
 class EncoderBaseConfig(MLModelBaseConfig):
-    size: Tuple[int, int]
+    size: Tuple[int, int]  # height, width
 
     @property
     def id(self) -> str:
