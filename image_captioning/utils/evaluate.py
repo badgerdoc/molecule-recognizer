@@ -17,7 +17,7 @@ def evaluation(checkpoint: Path):
 
     pipeline_cfg = load_config(checkpoint / PIPELINE_CONFIG_YML)
 
-    project_dir = Path(r'D:\EPAM\EpamLab\MolecularRecognition')
+    project_dir = pipeline_cfg.workdir.parent
     tokenizer_path = project_dir / 'tokenizer.pth'
     tokenizer: Tokenizer = torch.load(tokenizer_path)
     prep_train_df = pd.read_pickle(pipeline_cfg.preprocessed_train_df_path)
@@ -57,6 +57,7 @@ def evaluation(checkpoint: Path):
 
 
 if __name__ == '__main__':
+    from image_captioning.cli.cli_template import evaluate
     pipeline_config_path = Path(r"D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\workdir\checkpoints\effnetv2_l_300x400_transformer-encoder-decoder\latest\pipeline_config.yml")
     checkpoint_path = Path(r"D:\EPAM\EpamLab\MolecularRecognition\molecule-recognizer\workdir\checkpoints\effnetv2_l_300x400_transformer-encoder-decoder\latest")
     evaluate(pipeline_config_path, checkpoint_path)

@@ -3,6 +3,7 @@ from pathlib import Path
 import click
 
 from image_captioning.cli.commands import create_new_model, resume_from
+from image_captioning.utils.evaluate import evaluation
 from image_captioning.utils.prediction import get_prediction
 
 
@@ -38,8 +39,9 @@ def resume(checkpoint, skip_steps):
 @click.option('--checkpoint', '-c', help='Checkpoint path', required=True, type=Path)
 @click.command()
 def evaluate(checkpoint):
-    # TODO: evaluation pipeline is not implemented yet
+    """Loads models from given checkpoint, calculates and prints out evaluation metrics"""
     click.echo(f'Evaluation for checkpoint: {checkpoint}')
+    evaluation(checkpoint)
 
 
 @click.option('--img', help='Image path', required=True, type=Path)
