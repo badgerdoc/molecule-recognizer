@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 from albumentations import Compose, Normalize, Resize
 from albumentations.pytorch import ToTensorV2
-from matplotlib import pyplot as plt
 from torch.nn.utils.rnn import pack_padded_sequence
 from torch.optim import Adam
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -158,6 +157,7 @@ def train_loop(
     best_loss = np.inf
 
     for epoch in range(pipeline_config.epochs):
+
         start_time = time.time()
 
         avg_loss = train_fn(
@@ -208,7 +208,7 @@ def train_fn(
 
     for step, (images, labels, label_lengths) in enumerate(train_loader):
         if pipeline_config.checkpoint.skip_steps and trained_steps > step:
-            if pipeline_config.checkpoint.skip_steps and step % 1000 == 0 and trained_steps >= step:
+            if step % 1000 == 0:
                 print(f"{step} Skipped")
             continue
 
