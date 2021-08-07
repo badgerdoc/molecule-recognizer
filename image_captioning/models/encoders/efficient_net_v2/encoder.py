@@ -1,18 +1,24 @@
 import torch.nn as nn
 
 from image_captioning.base import register_model, ConfigurableModel
-from image_captioning.models.encoders.efficient_net_v2.config import EfficientNetV2Config
-from image_captioning.models.encoders.efficient_net_v2.model import custom_effnetv2_xl, custom_effnetv2_l
+from image_captioning.models.encoders.efficient_net_v2.config import (
+    EfficientNetV2Config,
+)
+from image_captioning.models.encoders.efficient_net_v2.model import (
+    custom_effnetv2_xl,
+    custom_effnetv2_l,
+    custom_effnetv2_m,
+)
 
 EFFNET_V2_XL = 'effnetv2_xl'
 EFFNET_V2_L = 'effnetv2_l'
+EFFNET_V2_M = 'effnetv2_m'
 
 _EFFICIENT_NET_V2_MODELS = {EFFNET_V2_L, EFFNET_V2_XL}
 
 
 @register_model('effnetv2')
 class EfficientNetV2Encoder(nn.Module, ConfigurableModel):
-
     def __init__(self, model: str):
         super().__init__()
         self.efficient_net = self._select_model(model)
@@ -27,6 +33,8 @@ class EfficientNetV2Encoder(nn.Module, ConfigurableModel):
             model = custom_effnetv2_xl()
         elif model == EFFNET_V2_L:
             model = custom_effnetv2_l()
+        elif model == EFFNET_V2_M:
+            model = custom_effnetv2_m()
         else:
             raise ValueError(
                 f'Unknown model "{model}" select one of the following models: {" ".join(_EFFICIENT_NET_V2_MODELS)}'
