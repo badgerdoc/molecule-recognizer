@@ -104,7 +104,12 @@ def train_loop(
 
     image_transforms = get_transforms(encoder_config)
     train_dataset = TrainDataset(
-        train_folds, images_path, tokenizer, transform=image_transforms
+        train_folds,
+        images_path,
+        tokenizer,
+        transform=image_transforms,
+        pipeline_config=pipeline_config,
+        encoder_config=encoder_config,
     )
     valid_dataset = TestDataset(
         valid_folds, images_path, tokenizer, transform=image_transforms
@@ -177,6 +182,9 @@ def train_loop(
            decoder_config,
         )
 
+        # Reset samples counter at the end of the epoch
+        pipeline_config.checkpoint.samples_trained = 0
+
         valid_fn(valid_dataset, encoder, decoder, tokenizer, valid_labels, device)
 
 
@@ -206,10 +214,16 @@ def train_fn(
 
     trained_steps = pipeline_config.checkpoint.samples_trained // pipeline_config.batch_size
 
-    for step, (images, labels, label_lengths) in enumerate(train_loader):
-        if pipeline_config.checkpoint.skip_steps and trained_steps > step:
+    for step, (images, labels, label_lengths, skip) in enumerate(train_loader):
+        gradient_accum_steps = pipeline_config.gradient_accumulation_steps
+
+        # Skip to the step where previous training was interrupted
+        if skip[0].item() == 1:
+            step += 1
+            if (step + 1) % gradient_accum_steps == 0:
+                global_step += 1
             if step % 1000 == 0:
-                print(f"{step} Skipped")
+                print(f"Skipped {step} steps")
             continue
 
         # Measure data loading time
@@ -249,7 +263,6 @@ def train_fn(
 
         # Record loss
         train_info.losses.update(loss.item(), batch_size)
-        gradient_accum_steps = pipeline_config.gradient_accumulation_steps
         if gradient_accum_steps > 1:
             loss = loss / gradient_accum_steps
         loss.backward()
